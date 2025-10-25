@@ -25,6 +25,9 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminReports from './pages/admin/AdminReports';
 import AIReportGenerator from './pages/admin/AIReportGenerator';
+import AdminProducts from './pages/admin/AdminProducts';
+import AdminCategories from './pages/admin/AdminCategories';
+import AdminOrders from './pages/admin/AdminOrders';
 
 import './App.css';
 
@@ -92,7 +95,7 @@ function App() {
                 path="/admin/products" 
                 element={
                   <ProtectedAdminRoute>
-                    <div className="p-8 text-center">Gestión de Productos - En construcción</div>
+                    <AdminProducts />
                   </ProtectedAdminRoute>
                 } 
               />
@@ -100,7 +103,15 @@ function App() {
                 path="/admin/orders" 
                 element={
                   <ProtectedAdminRoute>
-                    <div className="p-8 text-center">Gestión de Órdenes - En construcción</div>
+                    <AdminOrders />
+                  </ProtectedAdminRoute>
+                } 
+              />
+              <Route 
+                path="/admin/categories" 
+                element={
+                  <ProtectedAdminRoute>
+                    <AdminCategories />
                   </ProtectedAdminRoute>
                 } 
               />

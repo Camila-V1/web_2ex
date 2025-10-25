@@ -183,3 +183,100 @@ export const reportService = {
     return response.data;
   },
 };
+
+// Servicios de reseñas
+export const reviewService = {
+  // Obtener reseñas de un producto
+  getProductReviews: async (productId) => {
+    const response = await api.get(`products/${productId}/reviews/`);
+    return response.data;
+  },
+
+  // Crear reseña
+  createReview: async (reviewData) => {
+    const response = await api.post('products/reviews/', reviewData);
+    return response.data;
+  },
+
+  // Actualizar reseña
+  updateReview: async (reviewId, reviewData) => {
+    const response = await api.patch(`products/reviews/${reviewId}/`, reviewData);
+    return response.data;
+  },
+
+  // Eliminar reseña
+  deleteReview: async (reviewId) => {
+    const response = await api.delete(`products/reviews/${reviewId}/`);
+    return response.data;
+  },
+};
+
+// Servicios de recomendaciones (ML)
+export const recommendationService = {
+  // Obtener productos recomendados
+  getRecommendations: async (productId) => {
+    const response = await api.get(`products/${productId}/recommendations/`);
+    return response.data;
+  },
+};
+
+// Servicios de NLP (Carrito inteligente)
+export const nlpService = {
+  // Agregar productos con lenguaje natural
+  addToCartNaturalLanguage: async (prompt) => {
+    const response = await api.post('orders/cart/add-natural-language/', { prompt });
+    return response.data;
+  },
+
+  // Obtener sugerencias de productos
+  getSuggestions: async (query) => {
+    const response = await api.get(`orders/cart/suggestions/?q=${query}`);
+    return response.data;
+  },
+};
+
+// Servicios de predicciones (ML)
+export const predictionService = {
+  // Obtener predicciones de ventas
+  getSalesPredictions: async () => {
+    const response = await api.get('predictions/sales/');
+    return response.data;
+  },
+};
+
+// Servicios de administración
+export const adminService = {
+  // Dashboard
+  getDashboard: async () => {
+    const response = await api.get('orders/admin/dashboard/');
+    return response.data;
+  },
+
+  // Analytics de ventas
+  getSalesAnalytics: async () => {
+    const response = await api.get('orders/admin/analytics/sales/');
+    return response.data;
+  },
+
+  // Lista de usuarios con estadísticas
+  getAdminUsers: async () => {
+    const response = await api.get('orders/admin/users/');
+    return response.data;
+  },
+
+  // Gestión de órdenes admin
+  getAllOrders: async () => {
+    const response = await api.get('orders/admin/');
+    return response.data;
+  },
+
+  updateOrderStatus: async (orderId, status) => {
+    const response = await api.post(`orders/admin/${orderId}/update_status/`, { status });
+    return response.data;
+  },
+
+  deleteOrder: async (orderId) => {
+    const response = await api.delete(`orders/admin/${orderId}/`);
+    return response.data;
+  },
+};
