@@ -209,6 +209,23 @@ export const AuthProvider = ({ children }) => {
     return state.user?.is_staff === true;
   };
 
+  // Verificar si el usuario tiene un rol específico
+  const hasRole = (role) => {
+    return state.user?.role === role;
+  };
+
+  // Verificar si el usuario tiene permisos según jerarquía de roles
+  const hasPermission = (requiredRole) => {
+    const roleHierarchy = { 
+      ADMIN: 3, 
+      MANAGER: 2, 
+      CAJERO: 1 
+    };
+    const userRoleLevel = roleHierarchy[state.user?.role] || 0;
+    const requiredLevel = roleHierarchy[requiredRole] || 0;
+    return userRoleLevel >= requiredLevel;
+  };
+
   const value = {
     ...state,
     login,
@@ -216,6 +233,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     clearError,
     isAdmin,
+    hasRole,
+    hasPermission,
   };
 
   return (

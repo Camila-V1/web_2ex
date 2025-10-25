@@ -17,6 +17,8 @@ import Checkout from './pages/cart/Checkout';
 import PaymentSuccess from './pages/cart/PaymentSuccess';
 import PaymentCancelled from './pages/cart/PaymentCancelled';
 import TestPage from './pages/TestPage';
+import Profile from './pages/Profile';
+import MyOrders from './pages/MyOrders';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -60,7 +62,7 @@ function App() {
                 path="/orders" 
                 element={
                   <ProtectedRoute>
-                    <div className="p-8 text-center">Mis Pedidos - En construcción</div>
+                    <MyOrders />
                   </ProtectedRoute>
                 } 
               />
@@ -68,7 +70,7 @@ function App() {
                 path="/profile" 
                 element={
                   <ProtectedRoute>
-                    <div className="p-8 text-center">Mi Perfil - En construcción</div>
+                    <Profile />
                   </ProtectedRoute>
                 } 
               />
