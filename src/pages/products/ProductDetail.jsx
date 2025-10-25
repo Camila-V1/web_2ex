@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { productService, categoryService } from '../../services/api';
 import { useCart } from '../../contexts/CartContext';
+import ProductReviews from '../../components/products/ProductReviews';
 import { 
   ShoppingCart, 
   ArrowLeft, 
@@ -311,6 +312,9 @@ const ProductDetail = () => {
           )}
         </div>
       </div>
+
+      {/* Componente de Reseñas */}
+      <ProductReviews productId={id} />
     </div>
   );
 };
