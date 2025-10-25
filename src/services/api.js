@@ -34,6 +34,51 @@ export const authService = {
   },
 };
 
+// Servicios de usuarios
+export const userService = {
+  // Obtener perfil del usuario actual
+  getProfile: async () => {
+    const response = await api.get('users/profile/');
+    return response.data;
+  },
+
+  // Actualizar perfil del usuario
+  updateProfile: async (userId, userData) => {
+    const response = await api.patch(`users/${userId}/`, userData);
+    return response.data;
+  },
+
+  // Listar todos los usuarios (admin)
+  listUsers: async () => {
+    const response = await api.get('users/');
+    return response.data;
+  },
+
+  // Obtener un usuario específico (admin)
+  getUser: async (userId) => {
+    const response = await api.get(`users/${userId}/`);
+    return response.data;
+  },
+
+  // Crear usuario (admin)
+  createUser: async (userData) => {
+    const response = await api.post('users/', userData);
+    return response.data;
+  },
+
+  // Actualizar usuario (admin)
+  updateUser: async (userId, userData) => {
+    const response = await api.patch(`users/${userId}/`, userData);
+    return response.data;
+  },
+
+  // Eliminar usuario (admin)
+  deleteUser: async (userId) => {
+    const response = await api.delete(`users/${userId}/`);
+    return response.data;
+  },
+};
+
 // Servicios de productos
 export const productService = {
   // Obtener todos los productos
