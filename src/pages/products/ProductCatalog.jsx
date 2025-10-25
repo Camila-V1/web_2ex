@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { productService, categoryService } from '../../services/api';
+import { productService, categoryService, nlpService } from '../../services/api';
 import { useCart } from '../../contexts/CartContext';
 import { 
   ShoppingCart, 
@@ -11,19 +11,26 @@ import {
   Search,
   Package,
   AlertCircle,
-  Loader2
+  Loader2,
+  Sparkles
 } from 'lucide-react';
 
 const ProductCatalog = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
+  
+  const searchRef = useRef(null);
+  const suggestionsRef = useRef(null);
 
   const { addToCart, getItemQuantity } = useCart();
 
@@ -34,6 +41,48 @@ const ProductCatalog = () => {
   useEffect(() => {
     filterProducts();
   }, [products, searchTerm, selectedCategory, priceRange]);
+
+  // Efecto para obtener sugerencias de autocompletado
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (searchTerm.trim().length >= 2) {
+        setLoadingSuggestions(true);
+        try {
+          const suggestionsData = await nlpService.getCartSuggestions(searchTerm);
+          setSuggestions(suggestionsData);
+          setShowSuggestions(true);
+        } catch (err) {
+          console.error('Error fetching suggestions:', err);
+          setSuggestions([]);
+        } finally {
+          setLoadingSuggestions(false);
+        }
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm]);
+
+  // Cerrar sugerencias al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target) &&
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const loadData = async () => {
     try {
@@ -105,6 +154,18 @@ const ProductCatalog = () => {
     addToCart(product);
   };
 
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setSelectedCategory('');
+    setPriceRange({ min: '', max: '' });
+    setShowSuggestions(false);
+  };
+
+  const handleSuggestionClick = (product) => {
+    setSearchTerm(product.name);
+    setShowSuggestions(false);
+  };
+
   const getCategoryName = (categoryId) => {
     // Manejar si categoryId es undefined, null, un objeto o un ID
     if (!categoryId) return 'Sin categoría';
@@ -153,16 +214,68 @@ const ProductCatalog = () => {
       {/* Filtros y búsqueda */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Búsqueda */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Buscar productos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
+          {/* Búsqueda con autocompletado */}
+          <div className="relative" ref={searchRef}>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar productos con IA..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+              {searchTerm && (
+                <Sparkles className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-indigo-500 animate-pulse" />
+              )}
+            </div>
+            
+            {/* Dropdown de sugerencias */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div 
+                ref={suggestionsRef}
+                className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto"
+              >
+                <div className="p-2">
+                  <div className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                    <Sparkles className="h-3 w-3" />
+                    Sugerencias de IA
+                  </div>
+                  {suggestions.map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={() => handleSuggestionClick(product)}
+                      className="w-full text-left px-3 py-2 hover:bg-indigo-50 rounded-lg transition-colors flex items-center gap-3 group"
+                    >
+                      <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-100 transition-colors">
+                        <Package className="h-5 w-5 text-gray-400 group-hover:text-indigo-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate group-hover:text-indigo-600">
+                          {product.name}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          ${parseFloat(product.price).toFixed(2)}
+                        </p>
+                      </div>
+                      <div className="text-xs font-medium text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                        →
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {loadingSuggestions && (
+              <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4">
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 text-indigo-600 animate-spin" />
+                  <span className="text-sm text-gray-600">Buscando...</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Filtro por categoría */}

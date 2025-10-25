@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { productService, categoryService } from '../../services/api';
+import { productService, categoryService, recommendationService } from '../../services/api';
 import { useCart } from '../../contexts/CartContext';
 import ProductReviews from '../../components/products/ProductReviews';
 import { 
@@ -14,7 +14,8 @@ import {
   Star,
   Check,
   AlertCircle,
-  Loader2
+  Loader2,
+  Sparkles
 } from 'lucide-react';
 
 const ProductDetail = () => {
@@ -22,6 +23,8 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [category, setCategory] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -45,12 +48,28 @@ const ProductDetail = () => {
         setCategory(categoryData);
       }
 
+      // Cargar recomendaciones de ML
+      loadRecommendations(id);
+
       setError(null);
     } catch (err) {
       setError('Producto no encontrado');
       console.error('Error loading product:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadRecommendations = async (productId) => {
+    try {
+      setLoadingRecommendations(true);
+      const recommendedProducts = await recommendationService.getRecommendations(productId);
+      setRecommendations(recommendedProducts);
+    } catch (err) {
+      console.error('Error loading recommendations:', err);
+      // No mostrar error, las recomendaciones son opcionales
+    } finally {
+      setLoadingRecommendations(false);
     }
   };
 
@@ -313,8 +332,88 @@ const ProductDetail = () => {
         </div>
       </div>
 
+      {/* Recomendaciones de ML */}
+      {recommendations.length > 0 && (
+        <div className="mt-12 border-t pt-12">
+          <div className="flex items-center gap-3 mb-6">
+            <Sparkles className="h-6 w-6 text-indigo-600" />
+            <h2 className="text-2xl font-bold text-gray-900">
+              Productos Recomendados para Ti
+            </h2>
+          </div>
+          <p className="text-gray-600 mb-6">
+            Basado en inteligencia artificial y comportamiento de compra
+          </p>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {recommendations.slice(0, 4).map((recProduct) => (
+              <RecommendedProductCard key={recProduct.id} product={recProduct} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {loadingRecommendations && (
+        <div className="mt-12 border-t pt-12">
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 text-indigo-600 animate-spin mr-3" />
+            <span className="text-gray-600">Cargando recomendaciones...</span>
+          </div>
+        </div>
+      )}
+
       {/* Componente de Reseñas */}
       <ProductReviews productId={id} />
+    </div>
+  );
+};
+
+// Componente de tarjeta de producto recomendado
+const RecommendedProductCard = ({ product }) => {
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+  
+  const handleAddToCart = (e) => {
+    e.stopPropagation();
+    addToCart(product);
+  };
+
+  return (
+    <div 
+      onClick={() => navigate(`/products/${product.id}`)}
+      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group"
+    >
+      <div className="aspect-square bg-gray-200 flex items-center justify-center">
+        <Package className="h-12 w-12 text-gray-400" />
+      </div>
+      
+      <div className="p-4">
+        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-indigo-600 transition-colors">
+          {product.name}
+        </h3>
+        
+        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+          {product.description}
+        </p>
+        
+        <div className="flex items-center justify-between">
+          <span className="text-xl font-bold text-indigo-600">
+            ${parseFloat(product.price).toFixed(2)}
+          </span>
+          
+          {product.stock > 0 ? (
+            <button
+              onClick={handleAddToCart}
+              className="p-2 bg-indigo-100 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-colors"
+              title="Agregar al carrito"
+            >
+              <ShoppingCart className="h-5 w-5" />
+            </button>
+          ) : (
+            <span className="text-xs text-red-600 font-medium">Agotado</span>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

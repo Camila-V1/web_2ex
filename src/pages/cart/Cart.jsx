@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
+import VoiceCartAssistant from '../../components/cart/VoiceCartAssistant';
 import { 
   ShoppingCart, 
   Plus, 
@@ -47,6 +48,11 @@ const Cart = () => {
   if (items.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        {/* Asistente de voz incluso cuando el carrito está vacío */}
+        <div className="max-w-2xl mx-auto mb-12">
+          <VoiceCartAssistant />
+        </div>
+
         <div className="text-center">
           <ShoppingCart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Tu carrito está vacío</h2>
@@ -83,6 +89,11 @@ const Cart = () => {
           <ArrowLeft className="h-5 w-5" />
           <span>Seguir comprando</span>
         </button>
+      </div>
+
+      {/* Asistente de Voz NLP */}
+      <div className="mb-8">
+        <VoiceCartAssistant />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
