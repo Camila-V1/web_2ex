@@ -5,6 +5,7 @@ import { CartProvider } from './contexts/CartContext';
 import Layout from './components/layout/Layout';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
+import ProtectedManagerRoute from './components/manager/ProtectedManagerRoute';
 
 // Pages
 import Home from './pages/Home';
@@ -28,6 +29,9 @@ import ReturnDetail from './pages/returns/ReturnDetail';
 
 // Wallet Pages
 import MyWallet from './pages/wallet/MyWallet';
+
+// Manager Pages
+import ManagerReturns from './pages/manager/ManagerReturns';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -127,6 +131,16 @@ function App() {
               {/* Rutas de pago (públicas para que Stripe pueda redirigir) */}
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/payment-cancelled" element={<PaymentCancelled />} />
+              
+              {/* Rutas protegidas para managers/cajeros */}
+              <Route 
+                path="/manager/returns" 
+                element={
+                  <ProtectedManagerRoute>
+                    <ManagerReturns />
+                  </ProtectedManagerRoute>
+                } 
+              />
               
               {/* Rutas protegidas para administradores */}
               <Route 

@@ -18,7 +18,7 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   
-  const { user, isAuthenticated, logout, isAdmin } = useAuth();
+  const { user, isAuthenticated, logout, isAdmin, hasRole } = useAuth();
   const { totalItems } = useCart();
   const navigate = useNavigate();
 
@@ -28,7 +28,7 @@ const Header = () => {
     setIsUserMenuOpen(false);
   };
 
-  // Navegación diferente para admin vs usuarios regulares
+  // Navegación diferente para admin vs manager vs usuarios regulares
   const navigation = isAdmin() ? [
     { name: 'Dashboard', href: '/admin/dashboard' },
     { name: 'Productos', href: '/admin/products' },
@@ -37,6 +37,12 @@ const Header = () => {
     { name: 'Reportes', href: '/admin/reports' },
     { name: '🤖 Reportes IA', href: '/admin/ai-reports' },
     { name: '📋 Auditoría', href: '/admin/audit' },
+  ] : hasRole && (hasRole('MANAGER') || hasRole('CAJERO')) ? [
+    { name: 'Inicio', href: '/' },
+    { name: 'Productos', href: '/products' },
+    { name: '📊 Dashboard', href: '/admin/dashboard' },
+    { name: '📦 Devoluciones', href: '/manager/returns' },
+    ...(hasRole('MANAGER') ? [{ name: '🤖 Reportes IA', href: '/admin/ai-reports' }] : []),
   ] : [
     { name: 'Inicio', href: '/' },
     { name: 'Productos', href: '/products' },
