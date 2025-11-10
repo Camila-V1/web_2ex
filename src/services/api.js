@@ -365,3 +365,78 @@ export const adminService = {
     return response.data;
   },
 };
+
+// Servicios de devoluciones (Returns)
+export const returnService = {
+  // Solicitar devolución (cliente)
+  requestReturn: async (returnData) => {
+    const response = await api.post('deliveries/returns/', returnData);
+    return response.data;
+  },
+
+  // Obtener mis devoluciones (cliente) o todas (manager/admin)
+  getReturns: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `deliveries/returns/?${queryString}` : 'deliveries/returns/';
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  // Obtener detalle de una devolución
+  getReturn: async (returnId) => {
+    const response = await api.get(`deliveries/returns/${returnId}/`);
+    return response.data;
+  },
+
+  // Enviar a evaluación (manager/admin)
+  sendToEvaluation: async (returnId) => {
+    const response = await api.post(`deliveries/returns/${returnId}/send_to_evaluation/`, {});
+    return response.data;
+  },
+
+  // Aprobar devolución (manager/admin)
+  approveReturn: async (returnId, evaluationNotes, refundAmount) => {
+    const response = await api.post(`deliveries/returns/${returnId}/approve/`, {
+      evaluation_notes: evaluationNotes,
+      refund_amount: refundAmount
+    });
+    return response.data;
+  },
+
+  // Rechazar devolución (manager/admin)
+  rejectReturn: async (returnId, evaluationNotes) => {
+    const response = await api.post(`deliveries/returns/${returnId}/reject/`, {
+      evaluation_notes: evaluationNotes
+    });
+    return response.data;
+  },
+};
+
+// Servicios de billetera virtual (Wallet)
+export const walletService = {
+  // Obtener mi saldo
+  getMyBalance: async () => {
+    const response = await api.get('users/wallets/my_balance/');
+    return response.data;
+  },
+
+  // Obtener mi billetera (detalle completo)
+  getMyWallet: async () => {
+    const response = await api.get('users/wallets/');
+    return response.data;
+  },
+
+  // Obtener mis transacciones
+  getMyTransactions: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `users/wallet-transactions/my_transactions/?${queryString}` : 'users/wallet-transactions/my_transactions/';
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  // Obtener estadísticas de mi wallet
+  getStatistics: async () => {
+    const response = await api.get('users/wallet-transactions/statistics/');
+    return response.data;
+  },
+};

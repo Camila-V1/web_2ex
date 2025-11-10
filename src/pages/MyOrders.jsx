@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { orderService, reportService } from '../services/api';
 import { 
   ShoppingBag, 
@@ -11,10 +12,12 @@ import {
   CheckCircle,
   Clock,
   Truck,
-  XCircle
+  XCircle,
+  RotateCcw
 } from 'lucide-react';
 
 export default function MyOrders() {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -93,6 +96,23 @@ export default function MyOrders() {
       CANCELLED: 'Cancelado'
     };
     return labels[status] || status;
+  };
+
+  const canRequestReturn = (order) => {
+    // Solo se puede solicitar devolución si está DELIVERED
+    if (order.status !== 'DELIVERED') return false;
+    
+    // Verificar que no hayan pasado más de 30 días desde la entrega
+    const deliveryDate = new Date(order.updated_at);
+    const now = new Date();
+    const daysSinceDelivery = (now - deliveryDate) / (1000 * 60 * 60 * 24);
+    
+    return daysSinceDelivery <= 30;
+  };
+
+  const handleRequestReturn = (order) => {
+    // Navegar a la página de solicitud de devolución con los datos de la orden
+    navigate('/returns/new', { state: { order } });
   };
 
   if (loading) {
@@ -194,24 +214,37 @@ export default function MyOrders() {
                     {getStatusLabel(order.status)}
                   </span>
 
-                  {/* Botón de Descargar Factura */}
-                  <button
-                    onClick={() => downloadInvoice(order.id)}
-                    disabled={downloadingInvoice === order.id}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors disabled:opacity-60"
-                  >
-                    {downloadingInvoice === order.id ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Descargando...
-                      </>
-                    ) : (
-                      <>
-                        <Download className="h-4 w-4" />
-                        Descargar Factura
-                      </>
+                  <div className="flex gap-2">
+                    {/* Botón de Solicitar Devolución (solo si está DELIVERED y dentro de 30 días) */}
+                    {canRequestReturn(order) && (
+                      <button
+                        onClick={() => handleRequestReturn(order)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                        Solicitar Devolución
+                      </button>
                     )}
-                  </button>
+
+                    {/* Botón de Descargar Factura */}
+                    <button
+                      onClick={() => downloadInvoice(order.id)}
+                      disabled={downloadingInvoice === order.id}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors disabled:opacity-60"
+                    >
+                      {downloadingInvoice === order.id ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Descargando...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="h-4 w-4" />
+                          Descargar Factura
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Items de la Orden */}

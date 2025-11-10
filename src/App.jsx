@@ -21,6 +21,11 @@ import TestPage from './pages/TestPage';
 import Profile from './pages/Profile';
 import MyOrders from './pages/MyOrders';
 
+// Returns Pages
+import ReturnRequest from './pages/returns/ReturnRequest';
+import MyReturns from './pages/returns/MyReturns';
+import ReturnDetail from './pages/returns/ReturnDetail';
+
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -76,6 +81,32 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Profile />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Rutas de devoluciones (protegidas para usuarios autenticados) */}
+              <Route 
+                path="/returns/new" 
+                element={
+                  <ProtectedRoute>
+                    <ReturnRequest />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/returns" 
+                element={
+                  <ProtectedRoute>
+                    <MyReturns />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/returns/:id" 
+                element={
+                  <ProtectedRoute>
+                    <ReturnDetail />
                   </ProtectedRoute>
                 } 
               />
