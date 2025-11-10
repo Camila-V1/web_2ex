@@ -27,23 +27,62 @@ const VoiceCartAssistant = () => {
       
       console.log('✅ Respuesta del servidor:', response);
 
-      // Refrescar carrito si es necesario
-      if (refreshCart) {
-        refreshCart();
-      }
-
-      // Mostrar mensaje de éxito
-      if (response.message) {
+      // ✅ NUEVO: El backend ahora devuelve items para agregar al carrito
+      if (response.success && response.cart_action === 'add_to_cart' && response.items) {
+        console.log('� Agregando productos al carrito:', response.items);
+        
+        // Agregar cada producto al carrito
+        response.items.forEach(item => {
+          const cartItem = {
+            id: item.product_id,
+            name: item.name,
+            price: parseFloat(item.price),
+            image: item.image_url,
+            stock: item.stock_available,
+            description: item.description
+          };
+          
+          // Refrescar carrito usando el contexto
+          if (refreshCart) {
+            refreshCart();
+          }
+        });
+        
+        // Mostrar mensaje de éxito con detalles
         setMessage({ 
           type: 'success', 
           text: response.message,
-          products: response.products || []
+          products: response.items.map(item => ({
+            name: item.name,
+            quantity: item.quantity
+          }))
         });
+        
+        setCommand('');
+        
+        // Limpiar mensaje después de 8 segundos
+        setTimeout(() => setMessage(null), 8000);
+        
+        return;
       }
 
+      // Si hay error en la respuesta
+      if (response.error) {
+        setMessage({ 
+          type: 'error', 
+          text: response.error 
+        });
+        setTimeout(() => setMessage(null), 8000);
+        return;
+      }
+
+      // Mensaje genérico si no hay acción clara
+      setMessage({ 
+        type: 'info', 
+        text: response.message || 'Comando procesado' 
+      });
+
       setCommand('');
-      
-      // Limpiar mensaje después de 8 segundos
       setTimeout(() => setMessage(null), 8000);
 
     } catch (err) {

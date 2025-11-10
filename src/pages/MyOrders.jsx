@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { orderService } from '../services/api';
+import { orderService, reportService } from '../services/api';
 import { 
   ShoppingBag, 
   Download, 
@@ -40,18 +40,10 @@ export default function MyOrders() {
   const downloadInvoice = async (orderId) => {
     try {
       setDownloadingInvoice(orderId);
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-      const token = localStorage.getItem('access_token');
+      console.log('📄 Descargando factura para orden:', orderId);
       
-      const response = await fetch(`${API_URL}/reports/orders/${orderId}/invoice/`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) throw new Error('Error al descargar factura');
-
-      const blob = await response.blob();
+      const blob = await reportService.getInvoice(orderId);
+      
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -60,8 +52,10 @@ export default function MyOrders() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
+      
+      console.log('✅ Factura descargada exitosamente');
     } catch (err) {
-      console.error('Error downloading invoice:', err);
+      console.error('❌ Error downloading invoice:', err);
       alert('❌ Error al descargar la factura');
     } finally {
       setDownloadingInvoice(null);

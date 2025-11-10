@@ -35,6 +35,7 @@ const Header = () => {
     { name: 'Usuarios', href: '/admin/users' },
     { name: 'Reportes', href: '/admin/reports' },
     { name: '🤖 Reportes IA', href: '/admin/ai-reports' },
+    { name: '📋 Auditoría', href: '/admin/audit' },
   ] : [
     { name: 'Inicio', href: '/' },
     { name: 'Productos', href: '/products' },

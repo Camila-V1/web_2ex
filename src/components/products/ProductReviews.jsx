@@ -6,6 +6,8 @@ import { Star, Edit2, Trash2, Loader2, MessageSquare } from 'lucide-react';
 export default function ProductReviews({ productId }) {
   const { user, isAuthenticated } = useAuth();
   const [reviews, setReviews] = useState([]);
+  const [reviewCount, setReviewCount] = useState(0);
+  const [averageRating, setAverageRating] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingReview, setEditingReview] = useState(null);
@@ -19,9 +21,20 @@ export default function ProductReviews({ productId }) {
     try {
       setLoading(true);
       const data = await reviewService.getProductReviews(productId);
-      setReviews(data);
+      
+      // El backend devuelve: { count, average_rating, reviews: [] }
+      if (data && typeof data === 'object') {
+        setReviews(data.reviews || []);
+        setReviewCount(data.count || 0);
+        setAverageRating(data.average_rating || 0);
+      } else {
+        // Fallback si devuelve directamente un array
+        setReviews(Array.isArray(data) ? data : []);
+        setReviewCount(Array.isArray(data) ? data.length : 0);
+      }
     } catch (error) {
       console.error('Error loading reviews:', error);
+      setReviews([]);
     } finally {
       setLoading(false);
     }
@@ -89,10 +102,6 @@ export default function ProductReviews({ productId }) {
     ));
   };
 
-  const avgRating = reviews.length > 0
-    ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
-    : 0;
-
   return (
     <div className="mt-12 border-t pt-8">
       <div className="flex justify-between items-center mb-6">
@@ -101,11 +110,11 @@ export default function ProductReviews({ productId }) {
             <MessageSquare className="h-6 w-6" />
             Reseñas y Calificaciones
           </h2>
-          {reviews.length > 0 && (
+          {reviewCount > 0 && (
             <div className="flex items-center gap-3 mt-2">
-              <div className="flex">{renderStars(Math.round(avgRating))}</div>
-              <span className="text-lg font-semibold">{avgRating}</span>
-              <span className="text-gray-600">({reviews.length} reseñas)</span>
+              <div className="flex">{renderStars(Math.round(averageRating))}</div>
+              <span className="text-lg font-semibold">{averageRating.toFixed(1)}</span>
+              <span className="text-gray-600">({reviewCount} {reviewCount === 1 ? 'reseña' : 'reseñas'})</span>
             </div>
           )}
         </div>

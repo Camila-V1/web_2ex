@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { productService, categoryService, nlpService } from '../../services/api';
 import { useCart } from '../../contexts/CartContext';
 import { 
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 
 const ProductCatalog = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -37,6 +38,27 @@ const ProductCatalog = () => {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Leer categoría desde URL
+  useEffect(() => {
+    const categoryFromUrl = searchParams.get('category');
+    if (categoryFromUrl) {
+      setSelectedCategory(categoryFromUrl);
+    }
+  }, [searchParams]);
+
+  // Validar que la categoría existe
+  useEffect(() => {
+    if (selectedCategory && categories.length > 0) {
+      const categoryExists = categories.find(cat => cat.id.toString() === selectedCategory.toString());
+      if (!categoryExists) {
+        console.warn(`Categoría ${selectedCategory} no encontrada`);
+        setError(`La categoría seleccionada no existe`);
+        setSelectedCategory('');
+        setSearchParams({});
+      }
+    }
+  }, [selectedCategory, categories]);
 
   useEffect(() => {
     filterProducts();
@@ -210,6 +232,24 @@ const ProductCatalog = () => {
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Catálogo de Productos</h1>
         <p className="text-gray-600">Descubre nuestra amplia selección de productos</p>
       </div>
+
+      {/* Alerta de error de categoría */}
+      {error && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-lg">
+          <div className="flex items-center">
+            <AlertCircle className="h-5 w-5 text-yellow-400 mr-3" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-yellow-800">{error}</p>
+            </div>
+            <button
+              onClick={() => setError(null)}
+              className="text-yellow-400 hover:text-yellow-600"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Filtros y búsqueda */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">

@@ -159,11 +159,61 @@ const Login = () => {
             </button>
           </form>
 
+          {/* Botones de Autocompletar (solo desarrollo) */}
+          {import.meta.env.DEV && (
+            <div className="mt-4 space-y-2">
+              <p className="text-xs text-gray-600 text-center">🚀 Autocompletar (Dev):</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFormData({username: 'admin', password: 'admin123'})}
+                  className="py-2 px-3 text-xs bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200"
+                >
+                  👑 Admin
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({username: 'juan_cliente', password: 'juan123'})}
+                  className="py-2 px-3 text-xs bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors border border-green-200"
+                >
+                  👤 Juan (Cliente)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({username: 'laura_cliente', password: 'laura123'})}
+                  className="py-2 px-3 text-xs bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors border border-green-200"
+                >
+                  👤 Laura (Cliente)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({username: 'carlos_manager', password: 'carlos123'})}
+                  className="py-2 px-3 text-xs bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors border border-blue-200"
+                >
+                  👔 Carlos (Manager)
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Demo Credentials */}
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <p className="text-xs text-blue-800 font-medium mb-2">Credenciales de prueba:</p>
-            <p className="text-xs text-blue-700">Usuario: <span className="font-mono">admin</span></p>
-            <p className="text-xs text-blue-700">Contraseña: <span className="font-mono">admin123</span></p>
+            <p className="text-xs text-blue-800 font-medium mb-2">📋 Credenciales de prueba:</p>
+            
+            <div className="mb-3">
+              <p className="text-xs text-blue-800 font-semibold mb-1">👑 Administrador:</p>
+              <p className="text-xs text-blue-700">Usuario: <span className="font-mono">admin</span> | Contraseña: <span className="font-mono">admin123</span></p>
+            </div>
+            
+            <div>
+              <p className="text-xs text-blue-800 font-semibold mb-1">👥 Clientes:</p>
+              <p className="text-xs text-blue-700">Usuario: <span className="font-mono">juan_cliente</span> | Contraseña: <span className="font-mono">juan123</span></p>
+              <p className="text-xs text-blue-700">Usuario: <span className="font-mono">laura_cliente</span> | Contraseña: <span className="font-mono">laura123</span></p>
+            </div>
+            
+            <div className="mt-2 pt-2 border-t border-blue-200">
+              <p className="text-xs text-blue-600 italic">⚠️ Patrón: username completo, password solo el nombre + 123</p>
+            </div>
           </div>
         </div>
       </div>

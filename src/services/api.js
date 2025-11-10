@@ -26,6 +26,12 @@ export const authService = {
     return response.data;
   },
 
+  // Verificar si un token es válido
+  verifyToken: async (token) => {
+    const response = await api.post('token/verify/', { token });
+    return response.data;
+  },
+
   // Logout (limpiar tokens del localStorage)
   logout: () => {
     localStorage.removeItem('access_token');
@@ -66,7 +72,13 @@ export const userService = {
     return response.data;
   },
 
-  // Actualizar usuario (admin)
+  // Actualizar usuario completo (admin) - PUT
+  updateUserFull: async (userId, userData) => {
+    const response = await api.put(`users/${userId}/`, userData);
+    return response.data;
+  },
+
+  // Actualizar usuario parcial (admin) - PATCH
   updateUser: async (userId, userData) => {
     const response = await api.patch(`users/${userId}/`, userData);
     return response.data;
@@ -99,9 +111,15 @@ export const productService = {
     return response.data;
   },
 
-  // Actualizar producto (admin)
+  // Actualizar producto completo (admin) - PUT
   updateProduct: async (id, productData) => {
     const response = await api.put(`products/${id}/`, productData);
+    return response.data;
+  },
+
+  // Actualizar producto parcial (admin) - PATCH
+  patchProduct: async (id, productData) => {
+    const response = await api.patch(`products/${id}/`, productData);
     return response.data;
   },
 
@@ -116,31 +134,37 @@ export const productService = {
 export const categoryService = {
   // Obtener todas las categorías
   getCategories: async () => {
-    const response = await api.get('categories/');
+    const response = await api.get('products/categories/');
     return response.data;
   },
 
   // Obtener una categoría específica
   getCategory: async (id) => {
-    const response = await api.get(`categories/${id}/`);
+    const response = await api.get(`products/categories/${id}/`);
     return response.data;
   },
 
   // Crear categoría (admin)
   createCategory: async (categoryData) => {
-    const response = await api.post('categories/', categoryData);
+    const response = await api.post('products/categories/', categoryData);
     return response.data;
   },
 
-  // Actualizar categoría (admin)
+  // Actualizar categoría completa (admin) - PUT
   updateCategory: async (id, categoryData) => {
-    const response = await api.put(`categories/${id}/`, categoryData);
+    const response = await api.put(`products/categories/${id}/`, categoryData);
+    return response.data;
+  },
+
+  // Actualizar categoría parcial (admin) - PATCH
+  patchCategory: async (id, categoryData) => {
+    const response = await api.patch(`products/categories/${id}/`, categoryData);
     return response.data;
   },
 
   // Eliminar categoría (admin)
   deleteCategory: async (id) => {
-    const response = await api.delete(`categories/${id}/`);
+    const response = await api.delete(`products/categories/${id}/`);
     return response.data;
   },
 };
@@ -177,7 +201,25 @@ export const reportService = {
   // Generar reporte de ventas
   generateSalesReport: async (startDate, endDate, format = 'pdf') => {
     const response = await api.get(
-      `reports/sales/?start_date=${startDate}&end_date=${endDate}${format === 'excel' ? '&report_format=excel' : ''}`,
+      `reports/sales/?start_date=${startDate}&end_date=${endDate}&format=${format}`,
+      { responseType: 'blob' }
+    );
+    return response.data;
+  },
+
+  // Generar reporte de productos/inventario
+  generateProductsReport: async (format = 'pdf') => {
+    const response = await api.get(
+      `reports/products/?format=${format}`,
+      { responseType: 'blob' }
+    );
+    return response.data;
+  },
+
+  // Obtener factura de orden individual
+  getInvoice: async (orderId) => {
+    const response = await api.get(
+      `reports/orders/${orderId}/invoice/`,
       { responseType: 'blob' }
     );
     return response.data;
@@ -186,6 +228,18 @@ export const reportService = {
 
 // Servicios de reseñas
 export const reviewService = {
+  // Listar todas las reseñas (público)
+  getAllReviews: async () => {
+    const response = await api.get('products/reviews/');
+    return response.data;
+  },
+
+  // Obtener una reseña específica
+  getReview: async (reviewId) => {
+    const response = await api.get(`products/reviews/${reviewId}/`);
+    return response.data;
+  },
+
   // Obtener reseñas de un producto
   getProductReviews: async (productId) => {
     const response = await api.get(`products/${productId}/reviews/`);
@@ -198,7 +252,13 @@ export const reviewService = {
     return response.data;
   },
 
-  // Actualizar reseña
+  // Actualizar reseña completa (PUT)
+  updateReviewFull: async (reviewId, reviewData) => {
+    const response = await api.put(`products/reviews/${reviewId}/`, reviewData);
+    return response.data;
+  },
+
+  // Actualizar reseña parcial (PATCH)
   updateReview: async (reviewId, reviewData) => {
     const response = await api.patch(`products/reviews/${reviewId}/`, reviewData);
     return response.data;
@@ -270,6 +330,31 @@ export const adminService = {
     return response.data;
   },
 
+  // Obtener detalle de orden (admin)
+  getAdminOrder: async (orderId) => {
+    const response = await api.get(`orders/admin/${orderId}/`);
+    return response.data;
+  },
+
+  // Crear orden como admin (sin carrito)
+  createAdminOrder: async (orderData) => {
+    const response = await api.post('orders/admin/', orderData);
+    return response.data;
+  },
+
+  // Actualizar orden completa (admin) - PUT
+  updateAdminOrder: async (orderId, orderData) => {
+    const response = await api.put(`orders/admin/${orderId}/`, orderData);
+    return response.data;
+  },
+
+  // Actualizar orden parcial (admin) - PATCH
+  patchAdminOrder: async (orderId, orderData) => {
+    const response = await api.patch(`orders/admin/${orderId}/`, orderData);
+    return response.data;
+  },
+
+  // Actualizar estado de orden (endpoint específico)
   updateOrderStatus: async (orderId, status) => {
     const response = await api.post(`orders/admin/${orderId}/update_status/`, { status });
     return response.data;

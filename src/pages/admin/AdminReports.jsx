@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import { reportService } from '../../services/api';
 import { 
   FileText, 
   Download, 
@@ -8,8 +8,15 @@ import {
   Package,
   Loader2,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Eye,
+  X,
+  DollarSign,
+  ShoppingCart,
+  Users
 } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 export default function AdminReports() {
   const [loading, setLoading] = useState(false);
@@ -17,26 +24,92 @@ export default function AdminReports() {
     start_date: '',
     end_date: ''
   });
-
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+  
+  // Estados para vista previa
+  const [salesPreview, setSalesPreview] = useState(null);
+  const [productsPreview, setProductsPreview] = useState(null);
+  const [showSalesPreview, setShowSalesPreview] = useState(false);
+  const [showProductsPreview, setShowProductsPreview] = useState(false);
+  const [loadingPreview, setLoadingPreview] = useState(false);
   
   // Log de configuración inicial
-  console.log('📌 [INIT] AdminReports cargado');
-  console.log('📌 [INIT] API_URL configurada:', API_URL);
-  console.log('📌 [INIT] VITE_API_URL env:', import.meta.env.VITE_API_URL);
+  console.log('📌 [INIT] AdminReports cargado con reportService');
 
-  // Obtener token del localStorage
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('access_token');
-    console.log('🔑 [AUTH] Obteniendo headers de autenticación');
-    console.log('🔑 [AUTH] Token presente:', !!token);
-    if (token) {
-      console.log('🔑 [AUTH] Token preview:', token.substring(0, 30) + '...');
+  // Función para obtener vista previa de ventas
+  const previewSalesReport = async () => {
+    console.log('👁️ [PREVIEW] Iniciando vista previa de ventas');
+    
+    // Validar fechas
+    if (!salesDates.start_date || !salesDates.end_date) {
+      alert('⚠️ Por favor selecciona un rango de fechas');
+      return;
     }
-    return {
-      headers: { Authorization: `Bearer ${token}` },
-      responseType: 'blob' // Importante para descargar archivos
-    };
+
+    if (new Date(salesDates.start_date) > new Date(salesDates.end_date)) {
+      alert('❌ La fecha inicial debe ser menor que la fecha final');
+      return;
+    }
+
+    setLoadingPreview(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(
+        `${API_URL}/reports/sales/preview/?start_date=${salesDates.start_date}&end_date=${salesDates.end_date}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Error al obtener vista previa');
+      }
+
+      const data = await response.json();
+      console.log('✅ [PREVIEW] Datos recibidos:', data);
+      setSalesPreview(data);
+      setShowSalesPreview(true);
+    } catch (err) {
+      console.error('❌ [PREVIEW ERROR]:', err);
+      alert('❌ Error al obtener vista previa del reporte');
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
+  // Función para obtener vista previa de productos
+  const previewProductsReport = async () => {
+    console.log('👁️ [PREVIEW] Iniciando vista previa de productos');
+    
+    setLoadingPreview(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(
+        `${API_URL}/reports/products/preview/`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Error al obtener vista previa');
+      }
+
+      const data = await response.json();
+      console.log('✅ [PREVIEW] Datos recibidos:', data);
+      setProductsPreview(data);
+      setShowProductsPreview(true);
+    } catch (err) {
+      console.error('❌ [PREVIEW ERROR]:', err);
+      alert('❌ Error al obtener vista previa del reporte');
+    } finally {
+      setLoadingPreview(false);
+    }
   };
 
   // Función para descargar archivo
@@ -84,57 +157,33 @@ export default function AdminReports() {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('access_token');
-      console.log('🔷 [7] Token obtenido:', token ? `${token.substring(0, 20)}...` : 'NO HAY TOKEN');
+      console.log('🔷 [7] Llamando a reportService.generateSalesReport()');
+      console.log('🔷 [8] Parámetros:', {
+        startDate: salesDates.start_date,
+        endDate: salesDates.end_date,
+        format: format
+      });
       
-      const requestConfig = {
-        ...getAuthHeaders(),
-        params: {
-          format: format,
-          start_date: salesDates.start_date,
-          end_date: salesDates.end_date
-        }
-      };
+      const blob = await reportService.generateSalesReport(
+        salesDates.start_date,
+        salesDates.end_date,
+        format
+      );
       
-      const fullURL = `${API_URL}/reports/sales/`;
-      console.log('🔷 [8] URL completa:', fullURL);
-      console.log('🔷 [9] Parámetros:', requestConfig.params);
-      console.log('🔷 [10] Headers:', requestConfig.headers);
-      console.log('🔷 [11] responseType:', requestConfig.responseType);
+      console.log('✅ [9] Blob recibido, tamaño:', blob.size);
       
-      console.log('🔷 [12] Enviando petición GET...');
-      const response = await axios.get(fullURL, requestConfig);
-      
-      console.log('✅ [13] Respuesta recibida');
-      console.log('🔷 [14] Status:', response.status);
-      console.log('🔷 [15] Headers de respuesta:', response.headers);
-      console.log('🔷 [16] Tipo de data:', typeof response.data);
-      console.log('🔷 [17] Tamaño de data:', response.data?.size || 'unknown');
-
       const filename = generateFilename('ventas', format === 'excel' ? 'xlsx' : 'pdf', salesDates);
-      console.log('🔷 [18] Nombre de archivo generado:', filename);
+      console.log('🔷 [10] Nombre de archivo:', filename);
       
-      console.log('🔷 [19] Iniciando descarga...');
-      downloadFile(response.data, filename);
-      console.log('✅ [20] Descarga completada');
+      downloadFile(blob, filename);
+      console.log('✅ [11] Descarga completada');
       
       alert(`✅ Reporte de ventas generado exitosamente (${format.toUpperCase()})`);
     } catch (err) {
       console.error('❌ [ERROR] Error en reporte de ventas:', err);
       console.error('❌ [ERROR] Mensaje:', err.message);
-      console.error('❌ [ERROR] Response:', err.response);
-      console.error('❌ [ERROR] Request:', err.request);
-      console.error('❌ [ERROR] Config:', err.config);
-      
-      if (err.response) {
-        console.error('❌ [ERROR] Status:', err.response.status);
-        console.error('❌ [ERROR] Data:', err.response.data);
-        console.error('❌ [ERROR] Headers:', err.response.headers);
-      }
-      
       alert('❌ Error al generar el reporte de ventas');
     } finally {
-      console.log('🔷 [21] Finalizando (loading = false)');
       setLoading(false);
     }
   };
@@ -147,53 +196,24 @@ export default function AdminReports() {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('access_token');
-      console.log('🟢 [3] Token obtenido:', token ? `${token.substring(0, 20)}...` : 'NO HAY TOKEN');
+      console.log('🟢 [3] Llamando a reportService.generateProductsReport()');
       
-      const requestConfig = {
-        ...getAuthHeaders(),
-        params: { format: format }
-      };
+      const blob = await reportService.generateProductsReport(format);
       
-      const fullURL = `${API_URL}/reports/products/`;
-      console.log('🟢 [4] URL completa:', fullURL);
-      console.log('🟢 [5] Parámetros:', requestConfig.params);
-      console.log('🟢 [6] Headers:', requestConfig.headers);
-      console.log('🟢 [7] responseType:', requestConfig.responseType);
-      
-      console.log('🟢 [8] Enviando petición GET...');
-      const response = await axios.get(fullURL, requestConfig);
-      
-      console.log('✅ [9] Respuesta recibida');
-      console.log('🟢 [10] Status:', response.status);
-      console.log('🟢 [11] Headers de respuesta:', response.headers);
-      console.log('🟢 [12] Tipo de data:', typeof response.data);
-      console.log('🟢 [13] Tamaño de data:', response.data?.size || 'unknown');
+      console.log('✅ [4] Blob recibido, tamaño:', blob.size);
 
       const filename = generateFilename('productos', format === 'excel' ? 'xlsx' : 'pdf');
-      console.log('🟢 [14] Nombre de archivo generado:', filename);
+      console.log('🟢 [5] Nombre de archivo:', filename);
       
-      console.log('🟢 [15] Iniciando descarga...');
-      downloadFile(response.data, filename);
-      console.log('✅ [16] Descarga completada');
+      downloadFile(blob, filename);
+      console.log('✅ [6] Descarga completada');
       
       alert(`✅ Reporte de productos generado exitosamente (${format.toUpperCase()})`);
     } catch (err) {
-      console.error('❌ [ERROR PRODUCTOS] Error en reporte de productos:', err);
+      console.error('❌ [ERROR PRODUCTOS] Error:', err);
       console.error('❌ [ERROR PRODUCTOS] Mensaje:', err.message);
-      console.error('❌ [ERROR PRODUCTOS] Response:', err.response);
-      console.error('❌ [ERROR PRODUCTOS] Request:', err.request);
-      console.error('❌ [ERROR PRODUCTOS] Config:', err.config);
-      
-      if (err.response) {
-        console.error('❌ [ERROR PRODUCTOS] Status:', err.response.status);
-        console.error('❌ [ERROR PRODUCTOS] Data:', err.response.data);
-        console.error('❌ [ERROR PRODUCTOS] Headers:', err.response.headers);
-      }
-      
       alert('❌ Error al generar el reporte de productos');
     } finally {
-      console.log('🟢 [17] Finalizando (loading = false)');
       setLoading(false);
     }
   };
@@ -325,42 +345,64 @@ export default function AdminReports() {
             </div>
 
             {/* Botones de Descarga */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-3">
+              {/* Botón de Vista Previa */}
               <button
-                onClick={() => generateSalesReport('pdf')}
-                disabled={loading}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all disabled:opacity-60 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                onClick={previewSalesReport}
+                disabled={loadingPreview}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-lg hover:from-indigo-700 hover:to-indigo-800 transition-all disabled:opacity-60 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5"
               >
-                {loading ? (
+                {loadingPreview ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    Generando...
+                    Cargando Vista Previa...
                   </>
                 ) : (
                   <>
-                    <Download className="h-5 w-5" />
-                    PDF
+                    <Eye className="h-5 w-5" />
+                    👁️ Vista Previa
                   </>
                 )}
               </button>
 
-              <button
-                onClick={() => generateSalesReport('excel')}
-                disabled={loading}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all disabled:opacity-60 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Generando...
-                  </>
-                ) : (
-                  <>
-                    <Download className="h-5 w-5" />
-                    Excel
-                  </>
-                )}
-              </button>
+              {/* Botones de Descarga */}
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => generateSalesReport('pdf')}
+                  disabled={loading}
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all disabled:opacity-60 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Generando...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-5 w-5" />
+                      PDF
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => generateSalesReport('excel')}
+                  disabled={loading}
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all disabled:opacity-60 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Generando...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-5 w-5" />
+                      Excel
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -394,43 +436,65 @@ export default function AdminReports() {
               </p>
             </div>
 
-            {/* Botones de Descarga */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Botones */}
+            <div className="space-y-3">
+              {/* Botón de Vista Previa */}
               <button
-                onClick={() => generateProductsReport('pdf')}
-                disabled={loading}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all disabled:opacity-60 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                onClick={previewProductsReport}
+                disabled={loadingPreview}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-lg hover:from-indigo-700 hover:to-indigo-800 transition-all disabled:opacity-60 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5"
               >
-                {loading ? (
+                {loadingPreview ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    Generando...
+                    Cargando Vista Previa...
                   </>
                 ) : (
                   <>
-                    <Download className="h-5 w-5" />
-                    PDF
+                    <Eye className="h-5 w-5" />
+                    👁️ Vista Previa
                   </>
                 )}
               </button>
 
-              <button
-                onClick={() => generateProductsReport('excel')}
-                disabled={loading}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all disabled:opacity-60 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Generando...
-                  </>
-                ) : (
-                  <>
-                    <Download className="h-5 w-5" />
-                    Excel
-                  </>
-                )}
-              </button>
+              {/* Botones de Descarga */}
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => generateProductsReport('pdf')}
+                  disabled={loading}
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all disabled:opacity-60 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Generando...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-5 w-5" />
+                      PDF
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => generateProductsReport('excel')}
+                  disabled={loading}
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all disabled:opacity-60 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Generando...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-5 w-5" />
+                      Excel
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -470,6 +534,299 @@ export default function AdminReports() {
           </div>
         </div>
       </div>
+
+      {/* Modal de Vista Previa de Ventas */}
+      {showSalesPreview && salesPreview && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header del Modal */}
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Eye className="h-6 w-6" />
+                <div>
+                  <h3 className="text-xl font-bold">Vista Previa - Reporte de Ventas</h3>
+                  <p className="text-purple-100 text-sm">
+                    {salesPreview.start_date} a {salesPreview.end_date}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowSalesPreview(false)}
+                className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Estadísticas Resumen */}
+            <div className="p-6 bg-gray-50 border-b border-gray-200">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white p-4 rounded-lg border border-purple-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <ShoppingCart className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Total Órdenes</p>
+                      <p className="text-2xl font-bold text-gray-900">{salesPreview.total_orders}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white p-4 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                      <DollarSign className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Total Ventas</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        ${parseFloat(salesPreview.total_revenue).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white p-4 rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <TrendingUp className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Promedio por Orden</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        ${(parseFloat(salesPreview.total_revenue) / salesPreview.total_orders).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Contenido Scrollable */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-4">
+                {salesPreview.orders.map((order) => (
+                  <div key={order.order_id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                          <ShoppingCart className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-900">Orden #{order.order_id}</p>
+                          <p className="text-sm text-gray-500">{order.date}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-purple-600">${order.total}</p>
+                        <p className="text-sm text-gray-500">{order.items_count} items</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 mb-3 text-sm">
+                      <Users className="h-4 w-4 text-gray-400" />
+                      <span className="font-medium text-gray-700">{order.customer}</span>
+                      <span className="text-gray-400">|</span>
+                      <span className="text-gray-600">{order.customer_email}</span>
+                    </div>
+
+                    {order.items && order.items.length > 0 && (
+                      <div className="bg-gray-50 rounded-lg p-3 mt-3">
+                        <p className="text-xs font-medium text-gray-500 mb-2">PRODUCTOS:</p>
+                        <div className="space-y-2">
+                          {order.items.map((item, idx) => (
+                            <div key={idx} className="flex items-center justify-between text-sm">
+                              <div className="flex items-center gap-2">
+                                <span className="w-6 h-6 bg-white rounded flex items-center justify-center text-xs font-bold text-purple-600">
+                                  {item.quantity}x
+                                </span>
+                                <span className="text-gray-700">{item.product}</span>
+                              </div>
+                              <span className="font-medium text-gray-900">${item.subtotal}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer con Botones */}
+            <div className="p-6 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                Mostrando {salesPreview.orders.length} de {salesPreview.total_orders} órdenes
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => generateSalesReport('pdf')}
+                  className="flex items-center gap-2 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  <Download className="h-4 w-4" />
+                  Descargar PDF
+                </button>
+                <button
+                  onClick={() => generateSalesReport('excel')}
+                  className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <Download className="h-4 w-4" />
+                  Descargar Excel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Vista Previa de Productos */}
+      {showProductsPreview && productsPreview && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header del Modal */}
+            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-6 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Eye className="h-6 w-6" />
+                <div>
+                  <h3 className="text-xl font-bold">Vista Previa - Reporte de Inventario</h3>
+                  <p className="text-blue-100 text-sm">Productos activos en el sistema</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowProductsPreview(false)}
+                className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Estadísticas Resumen */}
+            <div className="p-6 bg-gray-50 border-b border-gray-200">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white p-4 rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <Package className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Total Productos</p>
+                      <p className="text-2xl font-bold text-gray-900">{productsPreview.total_products}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white p-4 rounded-lg border border-purple-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <ShoppingCart className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Stock Total</p>
+                      <p className="text-2xl font-bold text-gray-900">{productsPreview.total_stock}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white p-4 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                      <DollarSign className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Valor Total</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        ${parseFloat(productsPreview.total_value).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tabla de Productos */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        ID
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Nombre
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Categoría
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Precio
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Stock
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Valor Total
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {productsPreview.products.map((product) => (
+                      <tr key={product.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          #{product.id}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          {product.name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {product.category}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          ${product.price}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            product.stock < 10 
+                              ? 'bg-red-100 text-red-800' 
+                              : product.stock < 50 
+                              ? 'bg-yellow-100 text-yellow-800' 
+                              : 'bg-green-100 text-green-800'
+                          }`}>
+                            {product.stock} unidades
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                          ${product.value}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Footer con Botones */}
+            <div className="p-6 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                Mostrando {productsPreview.products.length} productos
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => generateProductsReport('pdf')}
+                  className="flex items-center gap-2 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  <Download className="h-4 w-4" />
+                  Descargar PDF
+                </button>
+                <button
+                  onClick={() => generateProductsReport('excel')}
+                  className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <Download className="h-4 w-4" />
+                  Descargar Excel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

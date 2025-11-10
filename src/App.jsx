@@ -12,6 +12,7 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ProductCatalog from './pages/products/ProductCatalog';
 import ProductDetail from './pages/products/ProductDetail';
+import Categories from './pages/Categories';
 import Cart from './pages/cart/Cart';
 import Checkout from './pages/cart/Checkout';
 import PaymentSuccess from './pages/cart/PaymentSuccess';
@@ -28,6 +29,7 @@ import AIReportGenerator from './pages/admin/AIReportGenerator';
 import AdminProducts from './pages/admin/AdminProducts';
 import AdminCategories from './pages/admin/AdminCategories';
 import AdminOrders from './pages/admin/AdminOrders';
+import AdminAudit from './pages/admin/AdminAudit';
 
 import './App.css';
 
@@ -47,7 +49,7 @@ function App() {
               {/* Rutas de productos (públicas pero con funcionalidad adicional para autenticados) */}
               <Route path="/products" element={<ProductCatalog />} />
               <Route path="/products/:id" element={<ProductDetail />} />
-              <Route path="/categories" element={<div className="p-8 text-center">Categorías - En construcción</div>} />
+              <Route path="/categories" element={<Categories />} />
               
               {/* Carrito (público pero checkout requiere autenticación) */}
               <Route path="/cart" element={<Cart />} />
@@ -136,6 +138,14 @@ function App() {
                 element={
                   <ProtectedAdminRoute>
                     <AIReportGenerator />
+                  </ProtectedAdminRoute>
+                } 
+              />
+              <Route 
+                path="/admin/audit" 
+                element={
+                  <ProtectedAdminRoute>
+                    <AdminAudit />
                   </ProtectedAdminRoute>
                 } 
               />
