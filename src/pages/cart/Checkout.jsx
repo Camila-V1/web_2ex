@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { orderService } from '../../services/api';
+import { orderService, walletService } from '../../services/api';
 import { 
   CreditCard, 
   Truck, 
@@ -15,7 +15,8 @@ import {
   User,
   Loader2,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Wallet
 } from 'lucide-react';
 
 const Checkout = () => {
@@ -26,6 +27,10 @@ const Checkout = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
   const [step, setStep] = useState(1); // 1: Review, 2: Payment
+  const [paymentMethod, setPaymentMethod] = useState('stripe'); // 'stripe' o 'wallet'
+  const [walletBalance, setWalletBalance] = useState(null);
+  const [useWalletAmount, setUseWalletAmount] = useState(0);
+  const [loadingWallet, setLoadingWallet] = useState(true);
   
   // Información de envío (en una app real esto vendría de un formulario)
   const [shippingInfo] = useState({
@@ -39,10 +44,33 @@ const Checkout = () => {
     zipCode: '00000'
   });
 
+  // Cargar saldo de billetera
+  useEffect(() => {
+    const fetchWalletBalance = async () => {
+      try {
+        const balance = await walletService.getMyBalance();
+        setWalletBalance(balance.balance);
+      } catch (err) {
+        console.error('Error al cargar saldo de billetera:', err);
+        // Si hay error, el usuario simplemente no podrá usar la billetera
+        setWalletBalance(null);
+      } finally {
+        setLoadingWallet(false);
+      }
+    };
+    fetchWalletBalance();
+  }, []);
+
   // Cálculos
   const shipping = 0; // Envío gratis
   const tax = totalAmount * 0.13; // IVA 13%
-  const finalTotal = totalAmount + shipping + tax;
+  const subtotalWithTax = totalAmount + shipping + tax;
+  
+  // Calcular cuánto se puede usar de la billetera
+  const maxWalletUsage = walletBalance && walletBalance > 0 ? Math.min(walletBalance, subtotalWithTax) : 0;
+  
+  // Total final después de aplicar saldo de billetera
+  const finalTotal = Math.max(0, subtotalWithTax - useWalletAmount);
 
   const handleCreateOrder = async () => {
     try {
@@ -51,23 +79,38 @@ const Checkout = () => {
 
       // 1. Crear la orden en el backend
       const cartData = getCartForAPI();
-      console.log('Datos del carrito para API:', cartData);
+      console.log('💳 Datos del carrito para API:', cartData);
+      console.log('💰 Método de pago:', paymentMethod, '- Monto billetera:', useWalletAmount);
       
       const order = await orderService.createOrder(cartData);
-      console.log('Orden creada:', order);
+      console.log('✅ Orden creada:', order);
 
-      // 2. Crear sesión de checkout de Stripe
+      // 2. Si usa billetera y el total está cubierto, marcar como pagado
+      if (paymentMethod === 'wallet' && useWalletAmount >= subtotalWithTax) {
+        console.log('🎯 Pago completo con billetera virtual');
+        
+        // TODO: Crear endpoint en backend para pagar con billetera
+        // Por ahora, continuamos con el flujo normal de Stripe
+        // El backend debería manejar esto automáticamente
+        
+        clearCart();
+        navigate(`/payment-success?order_id=${order.id}&paid_with_wallet=true`);
+        return;
+      }
+
+      // 3. Si usa billetera parcial o solo Stripe, crear sesión de Stripe
       const checkoutSession = await orderService.createCheckoutSession(order.id, {
-        success_url: `${window.location.origin}/payment-success?order_id=${order.id}`,
-        cancel_url: `${window.location.origin}/payment-cancelled?order_id=${order.id}`
+        success_url: `${window.location.origin}/payment-success?order_id=${order.id}${useWalletAmount > 0 ? '&partial_wallet=true' : ''}`,
+        cancel_url: `${window.location.origin}/payment-cancelled?order_id=${order.id}`,
+        ...(useWalletAmount > 0 && { wallet_amount: useWalletAmount })
       });
 
-      console.log('Sesión de checkout creada:', checkoutSession);
+      console.log('✅ Sesión de checkout creada:', checkoutSession);
 
-      // 3. Limpiar carrito (la orden ya fue creada)
+      // 4. Limpiar carrito (la orden ya fue creada)
       clearCart();
 
-      // 4. Redirigir a Stripe Checkout
+      // 5. Redirigir a Stripe Checkout
       if (checkoutSession.checkout_url) {
         window.location.href = checkoutSession.checkout_url;
       } else {
@@ -75,7 +118,7 @@ const Checkout = () => {
       }
 
     } catch (err) {
-      console.error('Error en checkout:', err);
+      console.error('❌ Error en checkout:', err);
       setError(
         err.response?.data?.error || 
         err.response?.data?.detail || 
@@ -176,19 +219,102 @@ const Checkout = () => {
             </h2>
             
             <div className="space-y-4">
-              <div className="border border-indigo-200 rounded-lg p-4 bg-indigo-50">
+              {/* Opción: Billetera Virtual */}
+              {!loadingWallet && walletBalance && walletBalance > 0 && (
+                <div 
+                  onClick={() => {
+                    setPaymentMethod('wallet');
+                    setUseWalletAmount(maxWalletUsage);
+                  }}
+                  className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                    paymentMethod === 'wallet' 
+                      ? 'border-purple-300 bg-purple-50 ring-2 ring-purple-200' 
+                      : 'border-gray-200 hover:border-purple-200 hover:bg-purple-25'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-2 rounded-full ${paymentMethod === 'wallet' ? 'bg-purple-100' : 'bg-gray-100'}`}>
+                      <Wallet className={`h-5 w-5 ${paymentMethod === 'wallet' ? 'text-purple-600' : 'text-gray-500'}`} />
+                    </div>
+                    <div className="flex-1">
+                      <p className={`font-medium ${paymentMethod === 'wallet' ? 'text-purple-900' : 'text-gray-900'}`}>
+                        Billetera Virtual
+                      </p>
+                      <p className={`text-sm ${paymentMethod === 'wallet' ? 'text-purple-700' : 'text-gray-600'}`}>
+                        Saldo disponible: ${parseFloat(walletBalance).toFixed(2)}
+                      </p>
+                    </div>
+                    {paymentMethod === 'wallet' && (
+                      <CheckCircle className="h-5 w-5 text-purple-600" />
+                    )}
+                  </div>
+                  
+                  {paymentMethod === 'wallet' && (
+                    <div className="mt-3 p-3 bg-white rounded-lg border border-purple-200">
+                      <p className="text-xs text-purple-800 mb-2">
+                        <strong>Usar saldo de billetera:</strong>
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="range"
+                          min="0"
+                          max={maxWalletUsage}
+                          step="0.01"
+                          value={useWalletAmount}
+                          onChange={(e) => setUseWalletAmount(parseFloat(e.target.value))}
+                          className="flex-1"
+                        />
+                        <span className="text-sm font-semibold text-purple-900 min-w-[80px]">
+                          ${useWalletAmount.toFixed(2)}
+                        </span>
+                      </div>
+                      {useWalletAmount < subtotalWithTax && (
+                        <p className="text-xs text-purple-600 mt-2">
+                          ℹ️ El resto (${(subtotalWithTax - useWalletAmount).toFixed(2)}) se pagará con Stripe
+                        </p>
+                      )}
+                      {useWalletAmount >= subtotalWithTax && (
+                        <p className="text-xs text-green-600 mt-2">
+                          ✅ Total cubierto con billetera virtual
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Opción: Stripe */}
+              <div 
+                onClick={() => {
+                  setPaymentMethod('stripe');
+                  setUseWalletAmount(0);
+                }}
+                className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                  paymentMethod === 'stripe' 
+                    ? 'border-indigo-300 bg-indigo-50 ring-2 ring-indigo-200' 
+                    : 'border-gray-200 hover:border-indigo-200 hover:bg-indigo-25'
+                }`}
+              >
                 <div className="flex items-center space-x-3">
-                  <Shield className="h-5 w-5 text-indigo-600" />
-                  <div>
-                    <p className="font-medium text-indigo-900">Pago Seguro con Stripe</p>
-                    <p className="text-sm text-indigo-700">
+                  <div className={`p-2 rounded-full ${paymentMethod === 'stripe' ? 'bg-indigo-100' : 'bg-gray-100'}`}>
+                    <Shield className={`h-5 w-5 ${paymentMethod === 'stripe' ? 'text-indigo-600' : 'text-gray-500'}`} />
+                  </div>
+                  <div className="flex-1">
+                    <p className={`font-medium ${paymentMethod === 'stripe' ? 'text-indigo-900' : 'text-gray-900'}`}>
+                      Pago Seguro con Stripe
+                    </p>
+                    <p className={`text-sm ${paymentMethod === 'stripe' ? 'text-indigo-700' : 'text-gray-600'}`}>
                       Tarjetas de crédito, débito y métodos locales
                     </p>
                   </div>
+                  {paymentMethod === 'stripe' && (
+                    <CheckCircle className="h-5 w-5 text-indigo-600" />
+                  )}
                 </div>
               </div>
               
-              <div className="text-xs text-gray-500 space-y-1">
+              {/* Información de seguridad */}
+              <div className="text-xs text-gray-500 space-y-1 pt-2">
                 <p>✓ Transacciones protegidas con SSL</p>
                 <p>✓ No almacenamos información de tarjetas</p>
                 <p>✓ Procesamiento seguro internacional</p>
@@ -256,13 +382,31 @@ const Checkout = () => {
                 <span className="font-medium">${tax.toFixed(2)}</span>
               </div>
               
+              {/* Mostrar descuento de billetera si aplica */}
+              {useWalletAmount > 0 && (
+                <div className="flex justify-between text-sm border-t pt-3">
+                  <span className="text-purple-600 flex items-center gap-1">
+                    <Wallet className="h-4 w-4" />
+                    Descuento Billetera Virtual
+                  </span>
+                  <span className="font-medium text-purple-600">
+                    -${useWalletAmount.toFixed(2)}
+                  </span>
+                </div>
+              )}
+              
               <div className="border-t pt-3">
                 <div className="flex justify-between">
-                  <span className="text-lg font-semibold text-gray-900">Total</span>
+                  <span className="text-lg font-semibold text-gray-900">Total a Pagar</span>
                   <span className="text-2xl font-bold text-indigo-600">
                     ${finalTotal.toFixed(2)}
                   </span>
                 </div>
+                {useWalletAmount > 0 && (
+                  <p className="text-xs text-gray-500 mt-1 text-right">
+                    (Original: ${subtotalWithTax.toFixed(2)})
+                  </p>
+                )}
               </div>
             </div>
 
