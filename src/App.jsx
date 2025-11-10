@@ -26,6 +26,9 @@ import ReturnRequest from './pages/returns/ReturnRequest';
 import MyReturns from './pages/returns/MyReturns';
 import ReturnDetail from './pages/returns/ReturnDetail';
 
+// Wallet Pages
+import MyWallet from './pages/wallet/MyWallet';
+
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -107,6 +110,16 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ReturnDetail />
+                  </ProtectedRoute>
+                } 
+              />
+
+              {/* Rutas de billetera virtual (protegidas para usuarios autenticados) */}
+              <Route 
+                path="/wallet" 
+                element={
+                  <ProtectedRoute>
+                    <MyWallet />
                   </ProtectedRoute>
                 } 
               />
