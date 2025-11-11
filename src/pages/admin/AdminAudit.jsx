@@ -171,45 +171,54 @@ const AdminAudit = () => {
     }
   };
 
-  // Cargar estadísticas
+  // Cargar estadísticas (calculadas localmente desde logs)
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('access_token');
+      console.log('📊 [STATS] Calculando estadísticas localmente...');
       
-      console.log('📊 [STATS] Obteniendo estadísticas...');
-      console.log('📊 [STATS] Token disponible:', token ? 'Sí' : 'No');
-      
-      if (!token) {
-        console.error('❌ [STATS] No hay token');
-        return;
-      }
-      
-      const response = await fetch(`${API_URL}/audit/stats/`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      console.log('📊 [STATS] Response status:', response.status);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ [STATS] Estadísticas recibidas:', data);
-        setStats(data);
+      // ⚠️ El endpoint /audit/stats/ no existe en el backend
+      // Calculamos las estadísticas desde los logs que ya tenemos
+      if (logs && logs.length > 0) {
+        const calculatedStats = {
+          total_logs: logs.length,
+          actions: {},
+          users: new Set(logs.map(log => log.user)).size,
+          recent_activity: logs.slice(0, 5)
+        };
+        
+        // Contar acciones
+        logs.forEach(log => {
+          const action = log.action || 'unknown';
+          calculatedStats.actions[action] = (calculatedStats.actions[action] || 0) + 1;
+        });
+        
+        console.log('✅ [STATS] Estadísticas calculadas:', calculatedStats);
+        setStats(calculatedStats);
       } else {
-        console.error('❌ [STATS] Error en response:', response.status, response.statusText);
+        console.log('📊 [STATS] No hay logs disponibles para calcular stats');
+        setStats({
+          total_logs: 0,
+          actions: {},
+          users: 0,
+          recent_activity: []
+        });
       }
     } catch (err) {
-      console.error('❌ [STATS] Error al obtener estadísticas:', err);
+      console.error('❌ [STATS] Error al calcular estadísticas:', err);
     }
   };
 
   // Cargar datos al montar
   useEffect(() => {
     fetchLogs(1);
-    fetchStats();
   }, []);
+
+  // Calcular stats cuando los logs cambien
+  useEffect(() => {
+    if (logs && logs.length > 0) {
+      fetchStats();
+    }
+  }, [logs]);
 
   // Aplicar filtros
   const applyFilters = () => {
