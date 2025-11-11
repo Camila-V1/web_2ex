@@ -21,25 +21,29 @@ const api = axios.create({
 // Interceptor para agregar el token de autenticación automáticamente
 api.interceptors.request.use(
   (config) => {
-    console.log('🔷 [AXIOS REQUEST]', {
-      method: config.method?.toUpperCase(),
-      url: config.url,
-      baseURL: config.baseURL,
-      fullURL: config.baseURL + config.url,
-      data: config.data,
-      headers: {
-        'Content-Type': config.headers['Content-Type'],
-        'Authorization': config.headers.Authorization ? 'Bearer ***' : 'No token',
-      },
+    // Construir URL completa para debugging
+    const fullURL = new URL(config.url || '', config.baseURL || window.location.origin).href;
+    
+    console.log('🔷 [AXIOS REQUEST] ============================================');
+    console.log('🔷 [AXIOS REQUEST] Method:', config.method?.toUpperCase());
+    console.log('🔷 [AXIOS REQUEST] baseURL:', config.baseURL);
+    console.log('🔷 [AXIOS REQUEST] url:', config.url);
+    console.log('🔷 [AXIOS REQUEST] Full URL:', fullURL);
+    console.log('🔷 [AXIOS REQUEST] Window Location:', window.location.href);
+    console.log('🔷 [AXIOS REQUEST] Data:', config.data);
+    console.log('🔷 [AXIOS REQUEST] Headers:', {
+      'Content-Type': config.headers['Content-Type'],
+      'Authorization': config.headers.Authorization ? 'Bearer ***' : 'No token',
     });
 
     const token = localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('🔷 [AXIOS REQUEST] Token agregado');
+      console.log('🔷 [AXIOS REQUEST] ✅ Token agregado');
     } else {
-      console.log('🔷 [AXIOS REQUEST] No hay token');
+      console.log('🔷 [AXIOS REQUEST] ⚠️ No hay token (normal para login)');
     }
+    console.log('🔷 [AXIOS REQUEST] ============================================');
     return config;
   },
   (error) => {
@@ -51,23 +55,33 @@ api.interceptors.request.use(
 // Interceptor para manejar respuestas y refrescar tokens
 api.interceptors.response.use(
   (response) => {
-    console.log('✅ [AXIOS RESPONSE]', {
-      status: response.status,
-      statusText: response.statusText,
-      url: response.config.url,
-      dataKeys: Object.keys(response.data || {}),
-    });
+    console.log('✅ [AXIOS RESPONSE] ============================================');
+    console.log('✅ [AXIOS RESPONSE] Status:', response.status, response.statusText);
+    console.log('✅ [AXIOS RESPONSE] URL:', response.config.url);
+    console.log('✅ [AXIOS RESPONSE] Full URL:', response.request?.responseURL || 'N/A');
+    console.log('✅ [AXIOS RESPONSE] Data Keys:', Object.keys(response.data || {}));
+    console.log('✅ [AXIOS RESPONSE] Data:', response.data);
+    console.log('✅ [AXIOS RESPONSE] ============================================');
     return response;
   },
   async (error) => {
-    console.error('❌ [AXIOS RESPONSE ERROR]', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
+    console.error('❌ [AXIOS RESPONSE ERROR] ============================================');
+    console.error('❌ [AXIOS RESPONSE ERROR] Status:', error.response?.status);
+    console.error('❌ [AXIOS RESPONSE ERROR] Status Text:', error.response?.statusText);
+    console.error('❌ [AXIOS RESPONSE ERROR] URL:', error.config?.url);
+    console.error('❌ [AXIOS RESPONSE ERROR] Method:', error.config?.method?.toUpperCase());
+    console.error('❌ [AXIOS RESPONSE ERROR] Base URL:', error.config?.baseURL);
+    console.error('❌ [AXIOS RESPONSE ERROR] Full URL:', error.request?.responseURL || 'N/A');
+    console.error('❌ [AXIOS RESPONSE ERROR] Response Data:', error.response?.data);
+    console.error('❌ [AXIOS RESPONSE ERROR] Error Message:', error.message);
+    console.error('❌ [AXIOS RESPONSE ERROR] Error Code:', error.code);
+    console.error('❌ [AXIOS RESPONSE ERROR] Request:', {
       url: error.config?.url,
-      method: error.config?.method?.toUpperCase(),
-      data: error.response?.data,
-      message: error.message,
+      baseURL: error.config?.baseURL,
+      method: error.config?.method,
+      data: error.config?.data,
     });
+    console.error('❌ [AXIOS RESPONSE ERROR] ============================================');
 
     const originalRequest = error.config;
 
