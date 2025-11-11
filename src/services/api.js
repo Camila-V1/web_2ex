@@ -4,8 +4,44 @@ import api from '../config/api';
 export const authService = {
   // Login
   login: async (credentials) => {
-    const response = await api.post('token/', credentials);
-    return response.data;
+    // 🔍 DEBUG: Ver exactamente qué se está enviando
+    console.log('🔷 [1] LOGIN REQUEST - Credenciales recibidas:', {
+      username: credentials.username,
+      password: credentials.password ? '***' : undefined,
+      usernameLength: credentials.username?.length,
+      passwordLength: credentials.password?.length,
+      usernameHasSpaces: credentials.username?.includes(' '),
+      passwordHasSpaces: credentials.password?.includes(' '),
+    });
+
+    // Limpiar espacios en blanco
+    const cleanedCredentials = {
+      username: credentials.username?.trim(),
+      password: credentials.password?.trim(),
+    };
+
+    console.log('🔷 [2] LOGIN REQUEST - Credenciales limpias:', {
+      username: cleanedCredentials.username,
+      usernameLength: cleanedCredentials.username?.length,
+      passwordLength: cleanedCredentials.password?.length,
+    });
+
+    try {
+      const response = await api.post('token/', cleanedCredentials);
+      console.log('✅ [3] LOGIN SUCCESS - Respuesta recibida:', {
+        hasAccess: !!response.data.access,
+        hasRefresh: !!response.data.refresh,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('❌ [4] LOGIN ERROR:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        detail: error.response?.data?.detail,
+        fullError: error.response?.data,
+      });
+      throw error;
+    }
   },
 
   // Registro

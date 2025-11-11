@@ -127,26 +127,43 @@ export const AuthProvider = ({ children }) => {
   // Función de login
   const login = async (credentials) => {
     try {
+      console.log('🔷 [AUTHCONTEXT 1] Iniciando login...');
+      console.log('🔷 [AUTHCONTEXT 2] Credenciales:', {
+        username: credentials.username,
+        hasPassword: !!credentials.password,
+      });
+
       dispatch({ type: authActions.SET_LOADING, payload: true });
       
       // 1. Obtener tokens
+      console.log('🔷 [AUTHCONTEXT 3] Llamando a authService.login...');
       const response = await authService.login(credentials);
       const { access, refresh } = response;
+
+      console.log('🔷 [AUTHCONTEXT 4] Tokens recibidos:', {
+        hasAccess: !!access,
+        hasRefresh: !!refresh,
+        accessLength: access?.length,
+      });
 
       // Guardar tokens
       localStorage.setItem('access_token', access);
       localStorage.setItem('refresh_token', refresh);
+      console.log('🔷 [AUTHCONTEXT 5] Tokens guardados en localStorage');
 
       // 2. Obtener información del usuario (incluyendo is_staff)
+      console.log('🔷 [AUTHCONTEXT 6] Obteniendo información del usuario...');
       const userData = await authService.getCurrentUser();
       
       // 🔍 DEBUG: Verificar qué datos se están recibiendo
-      console.log('🔍 DEBUG - Datos del usuario recibidos:', userData);
-      console.log('🔍 DEBUG - is_staff:', userData.is_staff);
-      console.log('🔍 DEBUG - is_superuser:', userData.is_superuser);
+      console.log('🔍 [AUTHCONTEXT 7] DEBUG - Datos del usuario recibidos:', userData);
+      console.log('🔍 [AUTHCONTEXT 8] DEBUG - is_staff:', userData.is_staff);
+      console.log('🔍 [AUTHCONTEXT 9] DEBUG - is_superuser:', userData.is_superuser);
+      console.log('🔍 [AUTHCONTEXT 10] DEBUG - role:', userData.role);
       
       // Guardar usuario completo en localStorage
       localStorage.setItem('user', JSON.stringify(userData));
+      console.log('🔷 [AUTHCONTEXT 11] Usuario guardado en localStorage');
 
       dispatch({
         type: authActions.LOGIN_SUCCESS,
@@ -155,9 +172,16 @@ export const AuthProvider = ({ children }) => {
         },
       });
 
+      console.log('✅ [AUTHCONTEXT 12] Login completado exitosamente');
       return { success: true, user: userData };
     } catch (error) {
-      console.error('❌ Error en login:', error);
+      console.error('❌ [AUTHCONTEXT ERROR] Error en login:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        detail: error.response?.data?.detail,
+        fullError: error.response?.data,
+      });
       const errorMessage = error.response?.data?.detail || 'Error en el inicio de sesión';
       dispatch({
         type: authActions.LOGIN_ERROR,

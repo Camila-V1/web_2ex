@@ -31,28 +31,42 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
+    console.log('🔷 [LOGIN 1] Formulario enviado');
+    console.log('🔷 [LOGIN 2] Datos del formulario:', {
+      username: formData.username,
+      hasPassword: !!formData.password,
+      usernameLength: formData.username.length,
+      passwordLength: formData.password.length,
+    });
+
     try {
+      console.log('🔷 [LOGIN 3] Llamando a login() del AuthContext...');
       const result = await login(formData);
-      console.log('🔍 DEBUG - Resultado del login:', result);
-      console.log('🔍 DEBUG - result.success:', result.success);
-      console.log('🔍 DEBUG - result.user:', result.user);
-      console.log('🔍 DEBUG - result.user?.is_staff:', result.user?.is_staff);
+      
+      console.log('🔍 [LOGIN 4] DEBUG - Resultado del login:', result);
+      console.log('🔍 [LOGIN 5] DEBUG - result.success:', result.success);
+      console.log('🔍 [LOGIN 6] DEBUG - result.user:', result.user);
+      console.log('🔍 [LOGIN 7] DEBUG - result.user?.is_staff:', result.user?.is_staff);
+      console.log('🔍 [LOGIN 8] DEBUG - result.user?.role:', result.user?.role);
       
       if (result.success) {
         // Redirigir según el tipo de usuario
         if (result.user && result.user.is_staff) {
-          console.log('✅ Usuario es ADMIN - Redirigiendo a /admin/dashboard');
+          console.log('✅ [LOGIN 9] Usuario es ADMIN - Redirigiendo a /admin/dashboard');
           // Usuario administrador - redirigir al dashboard admin
           navigate('/admin/dashboard');
         } else {
-          console.log('ℹ️ Usuario regular - Redirigiendo a /products');
+          console.log('ℹ️ [LOGIN 10] Usuario regular - Redirigiendo a /products');
           // Usuario regular - redirigir a productos
           navigate('/products');
         }
+      } else {
+        console.warn('⚠️ [LOGIN 11] Login falló:', result.error);
       }
     } catch (err) {
-      console.error('Error en login:', err);
+      console.error('❌ [LOGIN ERROR] Error en login:', err);
     } finally {
+      console.log('🔷 [LOGIN 12] Finalizando (setIsLoading false)');
       setIsLoading(false);
     }
   };

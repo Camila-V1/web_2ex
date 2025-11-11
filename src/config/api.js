@@ -17,43 +17,84 @@ const api = axios.create({
 // Interceptor para agregar el token de autenticación automáticamente
 api.interceptors.request.use(
   (config) => {
+    console.log('🔷 [AXIOS REQUEST]', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      baseURL: config.baseURL,
+      fullURL: config.baseURL + config.url,
+      data: config.data,
+      headers: {
+        'Content-Type': config.headers['Content-Type'],
+        'Authorization': config.headers.Authorization ? 'Bearer ***' : 'No token',
+      },
+    });
+
     const token = localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('🔷 [AXIOS REQUEST] Token agregado');
+    } else {
+      console.log('🔷 [AXIOS REQUEST] No hay token');
     }
     return config;
   },
   (error) => {
+    console.error('❌ [AXIOS REQUEST ERROR]', error);
     return Promise.reject(error);
   }
 );
 
 // Interceptor para manejar respuestas y refrescar tokens
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('✅ [AXIOS RESPONSE]', {
+      status: response.status,
+      statusText: response.statusText,
+      url: response.config.url,
+      dataKeys: Object.keys(response.data || {}),
+    });
+    return response;
+  },
   async (error) => {
+    console.error('❌ [AXIOS RESPONSE ERROR]', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: error.config?.url,
+      method: error.config?.method?.toUpperCase(),
+      data: error.response?.data,
+      message: error.message,
+    });
+
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      console.log('🔶 [AXIOS] 401 detectado, intentando refrescar token...');
       originalRequest._retry = true;
 
       try {
         const refreshToken = localStorage.getItem('refresh_token');
         if (refreshToken) {
+          console.log('🔶 [AXIOS] Llamando a token/refresh/...');
           const response = await axios.post(`${API_URL}token/refresh/`, {
             refresh: refreshToken,
           });
 
           const { access } = response.data;
           localStorage.setItem('access_token', access);
+          console.log('✅ [AXIOS] Token refrescado exitosamente');
 
           originalRequest.headers.Authorization = `Bearer ${access}`;
           return api(originalRequest);
+        } else {
+          console.warn('⚠️ [AXIOS] No hay refresh token disponible');
         }
       } catch (refreshError) {
+        console.error('❌ [AXIOS] Error al refrescar token:', refreshError);
         // Si el refresh también falla, limpiar tokens y redirigir al login
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        console.log('🔴 [AXIOS] Redirigiendo a /login');
         window.location.href = '/login';
       }
     }
