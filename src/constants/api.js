@@ -12,8 +12,8 @@
  */
 
 // API Configuration
-// Usar variable de entorno o fallback a backend en AWS
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://98.92.49.243/api';
+// Usar proxy de Vercel (ruta relativa) - Vercel redirigirá a http://98.92.49.243/api
+export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export const API_ENDPOINTS = {
   // ===== AUTHENTICATION =====

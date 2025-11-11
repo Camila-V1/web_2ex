@@ -1,10 +1,14 @@
 import axios from 'axios';
 
-// Configuración base de la API - Usa variable de entorno
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://98.92.49.243/api';
+// Configuración base de la API - Usa proxy de Vercel (ruta relativa)
+// Vercel redirigirá /api/* a http://98.92.49.243/api/*
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Asegurar que termine con /
 const API_URL = API_BASE_URL.endsWith('/') ? API_BASE_URL : `${API_BASE_URL}/`;
+
+console.log('🔧 [CONFIG] API_BASE_URL:', API_BASE_URL);
+console.log('🔧 [CONFIG] API_URL:', API_URL);
 
 // Instancia principal de axios
 const api = axios.create({
