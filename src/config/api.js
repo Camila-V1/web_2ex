@@ -21,8 +21,17 @@ const api = axios.create({
 // Interceptor para agregar el token de autenticación automáticamente
 api.interceptors.request.use(
   (config) => {
-    // Construir URL completa para debugging
-    const fullURL = new URL(config.url || '', config.baseURL || window.location.origin).href;
+    // Construir URL completa para debugging (safe)
+    let fullURL = 'N/A';
+    try {
+      if (config.baseURL && config.url) {
+        fullURL = `${config.baseURL}${config.url}`;
+      } else if (config.url) {
+        fullURL = config.url;
+      }
+    } catch (e) {
+      fullURL = `Error: ${e.message}`;
+    }
     
     console.log('🔷 [AXIOS REQUEST] ============================================');
     console.log('🔷 [AXIOS REQUEST] Method:', config.method?.toUpperCase());
