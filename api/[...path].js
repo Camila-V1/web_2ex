@@ -10,7 +10,7 @@
 
 const BACKEND_URL = 'http://98.92.49.243/api';
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Obtener el path completo después de /api/
   const { path } = req.query;
   const apiPath = Array.isArray(path) ? path.join('/') : path || '';
