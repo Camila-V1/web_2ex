@@ -28,8 +28,9 @@ const Header = () => {
     setIsUserMenuOpen(false);
   };
 
-  // Navegación diferente para admin vs manager vs usuarios regulares
+  // Navegación diferente para admin vs manager/cajero vs usuarios regulares
   const navigation = isAdmin() ? [
+    // Solo para ADMIN
     { name: 'Dashboard', href: '/admin/dashboard' },
     { name: 'Productos', href: '/admin/products' },
     { name: 'Órdenes', href: '/admin/orders' },
@@ -38,12 +39,14 @@ const Header = () => {
     { name: '🤖 Reportes IA', href: '/admin/ai-reports' },
     { name: '📋 Auditoría', href: '/admin/audit' },
   ] : hasRole && (hasRole('MANAGER') || hasRole('CAJERO')) ? [
+    // Para MANAGER y CAJERO (sin acceso a Dashboard ni Reportes Admin)
     { name: 'Inicio', href: '/' },
     { name: 'Productos', href: '/products' },
-    { name: '📊 Dashboard', href: '/admin/dashboard' },
-    { name: '📦 Devoluciones', href: '/manager/returns' },
-    ...(hasRole('MANAGER') ? [{ name: '🤖 Reportes IA', href: '/admin/ai-reports' }] : []),
+    { name: '� Devoluciones', href: '/manager/returns' },
+    // Solo los managers pueden ver las órdenes en general
+    ...(hasRole('MANAGER') ? [{ name: '📋 Órdenes', href: '/orders' }] : []),
   ] : [
+    // Para clientes regulares
     { name: 'Inicio', href: '/' },
     { name: 'Productos', href: '/products' },
     { name: 'Categorías', href: '/categories' },
