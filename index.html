@@ -5,6 +5,20 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SmartSales365</title>
+    
+    <!-- Workaround: Capturar errores 403 falsos globalmente -->
+    <script>
+      window.addEventListener('unhandledrejection', function(event) {
+        // Detectar error 403 falso (httpStatus 200 pero code 403)
+        if (event.reason && 
+            event.reason.code === 403 && 
+            event.reason.httpStatus === 200) {
+          console.warn('⚠️ Error 403 falso suprimido:', event.reason);
+          // Prevenir que se muestre en console
+          event.preventDefault();
+        }
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
