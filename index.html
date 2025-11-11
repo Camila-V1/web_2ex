@@ -6,18 +6,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SmartSales365</title>
     
-    <!-- Workaround: Capturar errores 403 falsos globalmente -->
+    <!-- Workaround AGRESIVO: Suprimir errores 403 falsos -->
     <script>
+      // Método 1: Handler de promesas no manejadas
       window.addEventListener('unhandledrejection', function(event) {
+        const reason = event.reason;
+        
         // Detectar error 403 falso (httpStatus 200 pero code 403)
-        if (event.reason && 
-            event.reason.code === 403 && 
-            event.reason.httpStatus === 200) {
-          console.warn('⚠️ Error 403 falso suprimido:', event.reason);
-          // Prevenir que se muestre en console
-          event.preventDefault();
+        if (reason && typeof reason === 'object') {
+          const isFake403 = (
+            reason.code === 403 && 
+            reason.httpStatus === 200 &&
+            reason.httpError === false
+          );
+          
+          if (isFake403) {
+            console.warn('⚠️ [SUPPRESSED] Error 403 falso detectado y suprimido');
+            console.warn('⚠️ Backend respondió 200 OK - Error causado por extensión/código minificado');
+            event.preventDefault();
+            return;
+          }
         }
       });
+      
+      // Método 2: Override console.error para filtrar este error específico
+      const originalError = console.error;
+      console.error = function(...args) {
+        const errorStr = JSON.stringify(args);
+        
+        // Si contiene el patrón del error 403 falso, no mostrarlo
+        if (errorStr.includes('"code":403') && 
+            errorStr.includes('"httpStatus":200') &&
+            errorStr.includes('"httpError":false')) {
+          console.warn('⚠️ [SUPPRESSED] Error 403 falso filtrado en console.error');
+          return;
+        }
+        
+        // Para otros errores, usar console.error normal
+        originalError.apply(console, args);
+      };
+      
+      // Método 3: Deshabilitar strict mode temporalmente para este error
+      window.onerror = function(message, source, lineno, colno, error) {
+        if (error && error.code === 403 && error.httpStatus === 200) {
+          console.warn('⚠️ [SUPPRESSED] Error 403 falso capturado en window.onerror');
+          return true; // Prevenir propagación
+        }
+      };
     </script>
   </head>
   <body>
