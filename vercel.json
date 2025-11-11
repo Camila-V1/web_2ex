@@ -5,6 +5,8 @@
       "destination": "http://98.92.49.243/api/:path*"
     }
   ],
+  "cleanUrls": false,
+  "trailingSlash": true,
   "headers": [
     {
       "source": "/api/(.*)",
