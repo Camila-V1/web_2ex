@@ -25,7 +25,7 @@ export default function AdminUsers() {
   const [editingUser, setEditingUser] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+  const API_URL = import.meta.env.VITE_API_URL || 'http://98.92.49.243/api';
 
   // Obtener token del localStorage
   const getAuthHeaders = () => {

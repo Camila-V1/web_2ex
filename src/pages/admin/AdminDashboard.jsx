@@ -30,8 +30,9 @@ const AdminDashboard = () => {
 
   const fetchDashboard = async () => {
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://98.92.49.243/api';
       const token = localStorage.getItem('access_token');
-      const response = await axios.get('http://localhost:8000/api/orders/admin/dashboard/', {
+      const response = await axios.get(`${API_URL}/orders/admin/dashboard/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStats(response.data);

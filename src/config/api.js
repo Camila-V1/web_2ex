@@ -1,11 +1,14 @@
 import axios from 'axios';
 
-// Configuración base de la API
-const API_BASE_URL = 'http://127.0.0.1:8000/api/';
+// Configuración base de la API - Usa variable de entorno
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://98.92.49.243/api';
+
+// Asegurar que termine con /
+const API_URL = API_BASE_URL.endsWith('/') ? API_BASE_URL : `${API_BASE_URL}/`;
 
 // Instancia principal de axios
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -37,7 +40,7 @@ api.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refresh_token');
         if (refreshToken) {
-          const response = await axios.post(`${API_BASE_URL}token/refresh/`, {
+          const response = await axios.post(`${API_URL}token/refresh/`, {
             refresh: refreshToken,
           });
 

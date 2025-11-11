@@ -16,7 +16,7 @@ import {
   Users
 } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://98.92.49.243/api';
 
 export default function AdminReports() {
   const [loading, setLoading] = useState(false);
