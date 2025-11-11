@@ -24,10 +24,25 @@ export default function AdminOrders() {
       setLoading(true);
       const data = await adminService.getAllOrders();
       console.log('🔍 [ADMIN ORDERS] Órdenes recibidas:', data);
-      console.log('🔍 [ADMIN ORDERS] Primera orden:', data[0]);
-      console.log('🔍 [ADMIN ORDERS] Items de primera orden:', data[0]?.items);
-      console.log('🔍 [ADMIN ORDERS] Order items:', data[0]?.order_items);
-      setOrders(data);
+      console.log('🔍 [ADMIN ORDERS] Primera orden COMPLETA:', JSON.stringify(data[0], null, 2));
+      console.log('🔍 [ADMIN ORDERS] Todas las keys:', Object.keys(data[0] || {}));
+      
+      // Si los items vienen vacíos, intentar cargar detalles de cada orden
+      const ordersWithDetails = await Promise.all(
+        data.map(async (order) => {
+          try {
+            // Intentar obtener detalles completos de la orden
+            const details = await adminService.getAdminOrder(order.id);
+            console.log(`🔍 [ORDER ${order.id}] Detalles:`, details);
+            return details;
+          } catch (error) {
+            console.warn(`⚠️ No se pudieron cargar detalles de orden ${order.id}`);
+            return order;
+          }
+        })
+      );
+      
+      setOrders(ordersWithDetails);
     } catch (error) {
       console.error('Error loading orders:', error);
       alert('❌ Error al cargar órdenes');
@@ -110,7 +125,7 @@ export default function AdminOrders() {
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-indigo-600">
-                  ${parseFloat(order.total_amount).toFixed(2)}
+                  ${parseFloat(order.total_amount || order.total_price || 0).toFixed(2)}
                 </div>
               </div>
             </div>
