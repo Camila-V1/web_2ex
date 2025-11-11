@@ -99,9 +99,10 @@ const Checkout = () => {
       }
 
       // 3. Si usa billetera parcial o solo Stripe, crear sesión de Stripe
+      const frontendUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
       const checkoutSession = await orderService.createCheckoutSession(order.id, {
-        success_url: `${window.location.origin}/payment-success?order_id=${order.id}${useWalletAmount > 0 ? '&partial_wallet=true' : ''}`,
-        cancel_url: `${window.location.origin}/payment-cancelled?order_id=${order.id}`,
+        success_url: `${frontendUrl}/payment-success?order_id=${order.id}${useWalletAmount > 0 ? '&partial_wallet=true' : ''}`,
+        cancel_url: `${frontendUrl}/payment-cancelled?order_id=${order.id}`,
         ...(useWalletAmount > 0 && { wallet_amount: useWalletAmount })
       });
 
