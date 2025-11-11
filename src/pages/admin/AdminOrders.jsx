@@ -23,6 +23,10 @@ export default function AdminOrders() {
     try {
       setLoading(true);
       const data = await adminService.getAllOrders();
+      console.log('🔍 [ADMIN ORDERS] Órdenes recibidas:', data);
+      console.log('🔍 [ADMIN ORDERS] Primera orden:', data[0]);
+      console.log('🔍 [ADMIN ORDERS] Items de primera orden:', data[0]?.items);
+      console.log('🔍 [ADMIN ORDERS] Order items:', data[0]?.order_items);
       setOrders(data);
     } catch (error) {
       console.error('Error loading orders:', error);
@@ -132,14 +136,18 @@ export default function AdminOrders() {
 
             <div className="border-t pt-4">
               <h4 className="font-semibold mb-2">Productos:</h4>
-              {order.items?.map((item, idx) => (
-                <div key={idx} className="flex justify-between py-2">
-                  <span>{item.product_name || `Producto #${item.product}`}</span>
-                  <span className="text-gray-600">
-                    {item.quantity} x ${parseFloat(item.price).toFixed(2)}
-                  </span>
-                </div>
-              ))}
+              {(order.items || order.order_items || []).length > 0 ? (
+                (order.items || order.order_items || []).map((item, idx) => (
+                  <div key={idx} className="flex justify-between py-2">
+                    <span>{item.product_name || item.name || `Producto #${item.product}`}</span>
+                    <span className="text-gray-600">
+                      {item.quantity} x ${parseFloat(item.price || item.unit_price || 0).toFixed(2)}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 italic py-2">No hay productos en esta orden</p>
+              )}
             </div>
 
             <div className="flex justify-end mt-4">
