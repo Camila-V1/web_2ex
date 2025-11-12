@@ -160,15 +160,34 @@ export default function RecommendedCarousel() {
             onClick={() => navigate(`/products/${product.id}`)}
           >
             {/* Imagen */}
-            <div className="h-40 bg-gray-200 relative overflow-hidden">
-              <img 
-                src={product.image_url || 'https://via.placeholder.com/250x160?text=Sin+Imagen'} 
-                alt={product.name}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/250x160?text=Sin+Imagen';
-                }}
-              />
+            <div className="h-40 bg-gradient-to-br from-indigo-100 to-purple-100 relative overflow-hidden flex items-center justify-center">
+              {product.image_url ? (
+                <img 
+                  src={product.image_url} 
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              ) : (
+                <div className="text-center p-4">
+                  <div className="text-4xl mb-2">
+                    {product.category_name?.toLowerCase().includes('laptop') ? '💻' :
+                     product.category_name?.toLowerCase().includes('phone') || product.name.toLowerCase().includes('iphone') || product.name.toLowerCase().includes('samsung') || product.name.toLowerCase().includes('xiaomi') ? '📱' :
+                     product.category_name?.toLowerCase().includes('tv') || product.name.toLowerCase().includes('tv') ? '📺' :
+                     product.category_name?.toLowerCase().includes('audio') || product.name.toLowerCase().includes('airpods') || product.name.toLowerCase().includes('auricular') ? '🎧' :
+                     product.category_name?.toLowerCase().includes('gaming') || product.name.toLowerCase().includes('playstation') || product.name.toLowerCase().includes('xbox') ? '🎮' :
+                     product.category_name?.toLowerCase().includes('hogar') || product.name.toLowerCase().includes('cafetera') || product.name.toLowerCase().includes('aspiradora') ? '🏠' :
+                     product.category_name?.toLowerCase().includes('libro') || product.name.toLowerCase().includes('libro') ? '📚' :
+                     product.category_name?.toLowerCase().includes('juguete') || product.name.toLowerCase().includes('lego') ? '🧸' :
+                     product.category_name?.toLowerCase().includes('deporte') || product.name.toLowerCase().includes('bicicleta') ? '⚽' :
+                     product.category_name?.toLowerCase().includes('cámara') || product.name.toLowerCase().includes('canon') || product.name.toLowerCase().includes('nikon') ? '📷' :
+                     '📦'}
+                  </div>
+                  <p className="text-xs text-gray-600 font-medium line-clamp-2">{product.name}</p>
+                </div>
+              )}
               
               {/* Badge de IA */}
               <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-purple-900 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
