@@ -101,24 +101,17 @@ export default function MyOrders() {
   const canRequestReturn = (order) => {
     // Solo se puede solicitar devolución si está DELIVERED
     if (order.status !== 'DELIVERED') {
-      console.log(`❌ Orden ${order.id}: Estado ${order.status}, no es DELIVERED`);
       return false;
     }
     
-    // Verificar que no hayan pasado más de 30 días desde la entrega
-    const deliveryDate = new Date(order.updated_at);
+    // Usar created_at ya que updated_at no está disponible
+    // En producción, el backend debería incluir delivery_date o updated_at
+    const orderDate = new Date(order.created_at);
     const now = new Date();
-    const daysSinceDelivery = (now - deliveryDate) / (1000 * 60 * 60 * 24);
+    const daysSinceOrder = (now - orderDate) / (1000 * 60 * 60 * 24);
     
-    console.log(`🔍 Orden ${order.id}:`, {
-      status: order.status,
-      updated_at: order.updated_at,
-      deliveryDate: deliveryDate.toLocaleDateString('es-ES'),
-      daysSinceDelivery: Math.floor(daysSinceDelivery),
-      canReturn: daysSinceDelivery <= 30
-    });
-    
-    return daysSinceDelivery <= 30;
+    // Permitir devoluciones dentro de 30 días desde la creación de la orden
+    return daysSinceOrder <= 30;
   };
 
   const handleRequestReturn = (order) => {
