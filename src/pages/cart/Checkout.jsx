@@ -99,7 +99,10 @@ const Checkout = () => {
       }
 
       // 3. Si usa billetera parcial o solo Stripe, crear sesión de Stripe
-      const frontendUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
+      // IMPORTANTE: Usar URL de producción fija para evitar redirects a preview URLs
+      const frontendUrl = import.meta.env.VITE_FRONTEND_URL || 'https://web-2ex.vercel.app';
+      console.log('🌐 Frontend URL para Stripe redirects:', frontendUrl);
+      
       const checkoutSession = await orderService.createCheckoutSession(order.id, {
         success_url: `${frontendUrl}/payment-success?order_id=${order.id}${useWalletAmount > 0 ? '&partial_wallet=true' : ''}`,
         cancel_url: `${frontendUrl}/payment-cancelled?order_id=${order.id}`,
