@@ -154,23 +154,14 @@ export default function RecommendedCarousel() {
           >
             {/* Imagen */}
             <div className="h-40 bg-gray-200 relative overflow-hidden">
-              {product.image_url ? (
-                <img 
-                  src={product.image_url} 
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gray-200"><svg class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg></div>';
-                  }}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                  <svg className="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                  </svg>
-                </div>
-              )}
+              <img 
+                src={product.image_url || 'https://via.placeholder.com/250x160?text=Sin+Imagen'} 
+                alt={product.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.src = 'https://via.placeholder.com/250x160?text=Sin+Imagen';
+                }}
+              />
               
               {/* Badge de IA */}
               <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-purple-900 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">

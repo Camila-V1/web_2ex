@@ -56,9 +56,9 @@ const Login = () => {
           // Usuario administrador - redirigir al dashboard admin
           navigate('/admin/dashboard');
         } else {
-          console.log('ℹ️ [LOGIN 10] Usuario regular - Redirigiendo a /products');
-          // Usuario regular - redirigir a productos
-          navigate('/products');
+          console.log('ℹ️ [LOGIN 10] Usuario regular - Redirigiendo a home');
+          // Usuario regular - redirigir a home con carousel de recomendaciones
+          navigate('/');
         }
       } else {
         console.warn('⚠️ [LOGIN 11] Login falló:', result.error);
