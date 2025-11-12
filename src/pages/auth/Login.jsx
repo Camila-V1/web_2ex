@@ -50,11 +50,17 @@ const Login = () => {
       console.log('🔍 [LOGIN 8] DEBUG - result.user?.role:', result.user?.role);
       
       if (result.success) {
-        // Redirigir según el tipo de usuario
-        if (result.user && result.user.is_staff) {
-          console.log('✅ [LOGIN 9] Usuario es ADMIN - Redirigiendo a /admin/dashboard');
-          // Usuario administrador - redirigir al dashboard admin
+        // Redirigir según el ROL específico del usuario
+        const userRole = result.user?.role;
+        
+        if (userRole === 'ADMIN' || userRole === 'MANAGER') {
+          console.log('✅ [LOGIN 9] Usuario ADMIN/MANAGER - Redirigiendo a /admin/dashboard');
+          // Usuario administrador o manager - redirigir al dashboard admin
           navigate('/admin/dashboard');
+        } else if (userRole === 'CAJERO') {
+          console.log('ℹ️ [LOGIN 10] Usuario CAJERO - Redirigiendo a /cajero/orders');
+          // Usuario cajero - redirigir a módulo de cajero
+          navigate('/cajero/orders');
         } else {
           console.log('ℹ️ [LOGIN 10] Usuario regular - Redirigiendo a home');
           // Usuario regular - redirigir a home con carousel de recomendaciones
