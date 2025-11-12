@@ -30,15 +30,30 @@ const AdminDashboard = () => {
 
   const fetchDashboard = async () => {
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://98.92.49.243/api';
+      const API_URL = import.meta.env.VITE_API_URL || 'https://backend-2ex-ecommerce.onrender.com/api';
       const token = localStorage.getItem('access_token');
+      
+      console.log('🔷 [DASHBOARD] Fetching dashboard data...');
+      console.log('🔷 [DASHBOARD] API_URL:', API_URL);
+      console.log('🔷 [DASHBOARD] Token:', token ? 'present' : 'missing');
+      
       const response = await axios.get(`${API_URL}/orders/admin/dashboard/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      console.log('✅ [DASHBOARD] Data received:', response.data);
       setStats(response.data);
     } catch (err) {
-      console.error('Error fetching dashboard:', err);
-      setError('Error al cargar el dashboard');
+      console.error('❌ [DASHBOARD] Error fetching dashboard:', err);
+      console.error('❌ [DASHBOARD] Error response:', err.response?.data);
+      console.error('❌ [DASHBOARD] Error status:', err.response?.status);
+      
+      // Si es error 403, mostrar mensaje específico
+      if (err.response?.status === 403) {
+        setError('No tienes permisos para acceder al dashboard. Contacta al administrador.');
+      } else {
+        setError('Error al cargar el dashboard');
+      }
     } finally {
       setLoading(false);
     }
