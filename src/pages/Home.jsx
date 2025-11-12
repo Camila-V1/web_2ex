@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { ShoppingBag, Star, Shield, Truck, Users, TrendingUp } from 'lucide-react';
+import RecommendedCarousel from '../components/products/RecommendedCarousel';
 
 const Home = () => {
   const { isAuthenticated, user } = useAuth();
@@ -38,6 +39,13 @@ const Home = () => {
 
   return (
     <div className="space-y-16 py-8">
+      {/* Carousel de recomendaciones - Solo para usuarios autenticados */}
+      {isAuthenticated && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <RecommendedCarousel />
+        </div>
+      )}
+
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-indigo-600 to-blue-700 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
