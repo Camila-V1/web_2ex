@@ -53,21 +53,27 @@ const Login = () => {
         // Redirigir según el ROL específico del usuario
         const userRole = result.user?.role;
         
+        console.log('🔍 [LOGIN 9] DEBUG - Verificando redirección...');
+        console.log('🔍 [LOGIN 9.1] userRole:', userRole);
+        console.log('🔍 [LOGIN 9.2] result.user:', result.user);
+        
         if (userRole === 'ADMIN' || userRole === 'MANAGER') {
-          console.log('✅ [LOGIN 9] Usuario ADMIN/MANAGER - Redirigiendo a /admin/dashboard');
+          console.log('✅ [LOGIN 10] Usuario ADMIN/MANAGER - Redirigiendo a /admin/dashboard');
           // Usuario administrador o manager - redirigir al dashboard admin
           navigate('/admin/dashboard');
         } else if (userRole === 'CAJERO') {
-          console.log('ℹ️ [LOGIN 10] Usuario CAJERO - Redirigiendo a /cajero/orders');
+          console.log('✅ [LOGIN 11] Usuario CAJERO - Redirigiendo a /cajero/orders');
+          console.log('🔍 [LOGIN 11.1] Ejecutando navigate("/cajero/orders")...');
           // Usuario cajero - redirigir a módulo de cajero
           navigate('/cajero/orders');
+          console.log('🔍 [LOGIN 11.2] navigate() ejecutado');
         } else {
-          console.log('ℹ️ [LOGIN 10] Usuario regular - Redirigiendo a home');
+          console.log('ℹ️ [LOGIN 12] Usuario regular (role:', userRole, ') - Redirigiendo a home');
           // Usuario regular - redirigir a home con carousel de recomendaciones
           navigate('/');
         }
       } else {
-        console.warn('⚠️ [LOGIN 11] Login falló:', result.error);
+        console.warn('⚠️ [LOGIN 13] Login falló:', result.error);
       }
     } catch (err) {
       console.error('❌ [LOGIN ERROR] Error en login:', err);

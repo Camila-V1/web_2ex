@@ -33,6 +33,10 @@ import MyWallet from './pages/wallet/MyWallet';
 // Manager Pages
 import ManagerReturns from './pages/manager/ManagerReturns';
 
+// Cajero Pages
+import CajeroOrders from './pages/cajero/CajeroOrders';
+import CajeroDashboard from './pages/cajero/CajeroDashboard';
+
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -139,6 +143,24 @@ function App() {
                   <ProtectedManagerRoute>
                     <ManagerReturns />
                   </ProtectedManagerRoute>
+                } 
+              />
+              
+              {/* Rutas protegidas para cajeros */}
+              <Route 
+                path="/cajero/orders" 
+                element={
+                  <ProtectedRoute>
+                    <CajeroOrders />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/cajero/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <CajeroDashboard />
+                  </ProtectedRoute>
                 } 
               />
               
