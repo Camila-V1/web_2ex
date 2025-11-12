@@ -160,18 +160,23 @@ const ProductDetail = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Imagen del producto */}
         <div className="space-y-4">
-          <div className="aspect-square bg-gray-200 rounded-lg flex items-center justify-center">
-            <Package className="h-24 w-24 text-gray-400" />
+          <div className="aspect-square bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+            {product.image_url ? (
+              <img 
+                src={product.image_url} 
+                alt={product.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.parentElement.innerHTML = '<svg class="h-24 w-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>';
+                }}
+              />
+            ) : (
+              <Package className="h-24 w-24 text-gray-400" />
+            )}
           </div>
           
-          {/* Thumbnails (placeholder para futuras imágenes) */}
-          <div className="grid grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
-                <Package className="h-8 w-8 text-gray-300" />
-              </div>
-            ))}
-          </div>
+          {/* Thumbnails removidos temporalmente ya que solo hay una imagen */}
         </div>
 
         {/* Información del producto */}

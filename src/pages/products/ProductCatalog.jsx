@@ -421,8 +421,20 @@ const ProductCard = ({ product, categoryName, onAddToCart, cartQuantity, viewMod
       <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-6">
         <div className="flex items-center space-x-6">
           {/* Imagen del producto */}
-          <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-            <Package className="h-8 w-8 text-gray-400" />
+          <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+            {product.image_url ? (
+              <img 
+                src={product.image_url} 
+                alt={product.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.parentElement.innerHTML = '<svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>';
+                }}
+              />
+            ) : (
+              <Package className="h-8 w-8 text-gray-400" />
+            )}
           </div>
 
           {/* Información del producto */}
@@ -471,8 +483,20 @@ const ProductCard = ({ product, categoryName, onAddToCart, cartQuantity, viewMod
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden">
       {/* Imagen del producto */}
-      <div className="h-48 bg-gray-200 flex items-center justify-center">
-        <Package className="h-12 w-12 text-gray-400" />
+      <div className="h-48 bg-gray-200 flex items-center justify-center overflow-hidden">
+        {product.image_url ? (
+          <img 
+            src={product.image_url} 
+            alt={product.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.parentElement.innerHTML = '<svg class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>';
+            }}
+          />
+        ) : (
+          <Package className="h-12 w-12 text-gray-400" />
+        )}
       </div>
 
       {/* Contenido */}
