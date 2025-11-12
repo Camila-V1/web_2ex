@@ -62,10 +62,10 @@ const Login = () => {
           // Usuario administrador o manager - redirigir al dashboard admin
           navigate('/admin/dashboard');
         } else if (userRole === 'CAJERO') {
-          console.log('✅ [LOGIN 11] Usuario CAJERO - Redirigiendo a /cajero/orders');
-          console.log('🔍 [LOGIN 11.1] Ejecutando navigate("/cajero/orders")...');
-          // Usuario cajero - redirigir a módulo de cajero
-          navigate('/cajero/orders');
+          console.log('✅ [LOGIN 11] Usuario CAJERO - Redirigiendo a /products');
+          console.log('🔍 [LOGIN 11.1] Ejecutando navigate("/products")...');
+          // Usuario cajero - redirigir directo a productos
+          navigate('/products');
           console.log('🔍 [LOGIN 11.2] navigate() ejecutado');
         } else {
           console.log('ℹ️ [LOGIN 12] Usuario regular (role:', userRole, ') - Redirigiendo a home');
