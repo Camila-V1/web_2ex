@@ -29,11 +29,18 @@ export default function RecommendedCarousel() {
       // Obtener productos recomendados (puedes usar un endpoint específico o filtrar)
       const products = await productService.getProducts();
       
+      console.log('🔍 [CAROUSEL] Total productos:', products.length);
+      console.log('🔍 [CAROUSEL] Primer producto:', products[0]);
+      console.log('🔍 [CAROUSEL] image_url del primero:', products[0]?.image_url);
+      
       // Simular recomendaciones IA - En producción esto vendría del backend
       // Por ahora, tomar productos aleatorios con stock
       const available = products.filter(p => p.stock > 0 && p.is_active);
       const shuffled = available.sort(() => 0.5 - Math.random());
       const selected = shuffled.slice(0, 10); // Top 10 recomendaciones
+      
+      console.log('🔍 [CAROUSEL] Productos seleccionados:', selected.length);
+      console.log('🔍 [CAROUSEL] Imágenes:', selected.map(p => ({ id: p.id, name: p.name, image: p.image_url })));
       
       setRecommendations(selected);
     } catch (error) {
