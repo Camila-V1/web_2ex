@@ -228,9 +228,12 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: authActions.CLEAR_ERROR });
   };
 
-  // Verificar si el usuario es admin
+  // Verificar si el usuario es admin O manager (acceso completo al panel admin)
   const isAdmin = () => {
-    return state.user?.is_staff === true;
+    const role = state.user?.role;
+    const result = role === 'ADMIN' || role === 'MANAGER';
+    console.log('🔍 [AUTH] isAdmin() - role:', role, '| result:', result);
+    return result;
   };
 
   // Verificar si el usuario tiene un rol específico
