@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['vite.svg'],
+      includeAssets: ['vite.svg', 'icon-144x144.png', 'icon-192x192.png', 'icon-512x512.png'],
       manifest: {
         name: 'SmartSales365',
         short_name: 'SmartSales',
@@ -19,16 +19,22 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: '/vite.svg',
-            sizes: '192x192',
-            type: 'image/svg+xml',
+            src: '/icon-144x144.png',
+            sizes: '144x144',
+            type: 'image/png',
             purpose: 'any'
           },
           {
-            src: '/vite.svg',
+            src: '/icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/icon-512x512.png',
             sizes: '512x512',
-            type: 'image/svg+xml',
-            purpose: 'any'
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ],
         categories: ['shopping', 'business'],
