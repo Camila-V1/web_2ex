@@ -1,0 +1,27 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo gradient indigo -->
+  <rect width="192" height="192" rx="40" fill="url(#gradient)"/>
+  <defs>
+    <linearGradient id="gradient" x1="0" y1="0" x2="192" y2="192">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Icono de carrito de compras -->
+  <g transform="translate(48, 48)">
+    <!-- Carrito -->
+    <path d="M6 6h16l3.5 14H10L6 6z" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <circle cx="28" cy="80" r="6" fill="white"/>
+    <circle cx="68" cy="80" r="6" fill="white"/>
+    <line x1="10" y1="6" x2="0" y2="6" stroke="white" stroke-width="6" stroke-linecap="round"/>
+    
+    <!-- Sparkles para IA -->
+    <circle cx="70" cy="20" r="4" fill="#fbbf24"/>
+    <circle cx="80" cy="10" r="3" fill="#fbbf24"/>
+    <circle cx="75" cy="30" r="3" fill="#fbbf24"/>
+  </g>
+  
+  <!-- Texto "365" -->
+  <text x="96" y="140" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="white" text-anchor="middle">365</text>
+</svg>

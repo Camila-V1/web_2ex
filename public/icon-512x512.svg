@@ -1,0 +1,35 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo gradient indigo -->
+  <rect width="512" height="512" rx="100" fill="url(#gradient)"/>
+  <defs>
+    <linearGradient id="gradient" x1="0" y1="0" x2="512" y2="512">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Icono de carrito de compras (más grande) -->
+  <g transform="translate(128, 120)">
+    <!-- Carrito -->
+    <path d="M20 20h90l20 90H50L20 20z" stroke="white" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <circle cx="80" cy="200" r="16" fill="white"/>
+    <circle cx="180" cy="200" r="16" fill="white"/>
+    <line x1="30" y1="20" x2="0" y2="20" stroke="white" stroke-width="16" stroke-linecap="round"/>
+    
+    <!-- Productos en el carrito -->
+    <rect x="50" y="50" width="30" height="30" fill="white" opacity="0.8" rx="4"/>
+    <rect x="90" y="50" width="30" height="30" fill="white" opacity="0.8" rx="4"/>
+    
+    <!-- Sparkles para IA -->
+    <circle cx="190" cy="50" r="10" fill="#fbbf24"/>
+    <circle cx="210" cy="30" r="8" fill="#fbbf24"/>
+    <circle cx="200" cy="70" r="8" fill="#fbbf24"/>
+    <circle cx="220" cy="55" r="6" fill="#fbbf24"/>
+  </g>
+  
+  <!-- Texto "SmartSales" -->
+  <text x="256" y="340" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle">SmartSales</text>
+  
+  <!-- Texto "365" -->
+  <text x="256" y="400" font-family="Arial, sans-serif" font-size="72" font-weight="bold" fill="white" text-anchor="middle">365</text>
+</svg>
