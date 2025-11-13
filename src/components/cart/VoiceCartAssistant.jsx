@@ -8,7 +8,7 @@ const VoiceCartAssistant = () => {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [message, setMessage] = useState(null);
-  const { refreshCart } = useCart();
+  const { addToCart } = useCart();
 
   // Procesar comando NLP
   const processCommand = async (userCommand) => {
@@ -39,19 +39,25 @@ const VoiceCartAssistant = () => {
             price: parseFloat(item.price),
             image: item.image_url,
             stock: item.stock_available,
-            description: item.description
+            description: item.description || ''
           };
           
-          // Refrescar carrito usando el contexto
-          if (refreshCart) {
-            refreshCart();
+          console.log(`  ➕ Agregando: ${cartItem.name} x${item.quantity}`);
+          
+          // Agregar el producto la cantidad de veces especificada
+          for (let i = 0; i < item.quantity; i++) {
+            addToCart(cartItem);
           }
         });
+        
+        // Calcular totales
+        const totalQty = response.items.reduce((sum, item) => sum + item.quantity, 0);
+        const totalPrice = parseFloat(response.total);
         
         // Mostrar mensaje de éxito con detalles
         setMessage({ 
           type: 'success', 
-          text: response.message,
+          text: `✅ ${response.items.length} producto(s) añadido(s) al carrito (x${totalQty}) - Total: $${totalPrice.toFixed(2)}`,
           products: response.items.map(item => ({
             name: item.name,
             quantity: item.quantity
