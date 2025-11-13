@@ -48,6 +48,9 @@ import AdminOrders from './pages/admin/AdminOrders';
 import AdminAudit from './pages/admin/AdminAudit';
 import AdminPredictions from './pages/admin/AdminPredictions';
 
+// Offline Page
+import OfflinePage from './pages/OfflinePage';
+
 import './App.css';
 
 function App() {

@@ -2,6 +2,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
+import { registerSW } from 'virtual:pwa-register'
+import { cleanOldCache } from './hooks/useOffline'
 
 // Workaround TRIPLE: Suprimir errores 403 falsos de todas las formas posibles
 const suppressFake403 = (reason) => {
@@ -43,6 +45,30 @@ Promise.prototype.catch = function(onRejected) {
     throw error;
   });
 };
+
+// Registrar Service Worker para PWA
+if ('serviceWorker' in navigator) {
+  const updateSW = registerSW({
+    onNeedRefresh() {
+      console.log('🔄 Nueva versión disponible');
+      if (confirm('Hay una nueva versión disponible. ¿Deseas actualizar?')) {
+        updateSW(true);
+      }
+    },
+    onOfflineReady() {
+      console.log('✅ App lista para funcionar offline');
+    },
+    onRegistered() {
+      console.log('✅ Service Worker registrado');
+    },
+    onRegisterError(error) {
+      console.error('❌ Error al registrar Service Worker:', error);
+    },
+  });
+
+  // Limpiar caché antigua al iniciar
+  cleanOldCache(168); // 7 días
+}
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

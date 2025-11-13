@@ -1,10 +1,12 @@
 import React from 'react';
 import Header from './Header';
 import Footer from './Footer';
+import NetworkStatus from '../common/NetworkStatus';
 
 const Layout = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
+      <NetworkStatus />
       <Header />
       <main className="flex-1">
         {children}

@@ -55,28 +55,57 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2}'],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api/],
         runtimeCaching: [
+          // API - NetworkFirst con fallback offline
           {
             urlPattern: /^https:\/\/backend-2ex-ecommerce\.onrender\.com\/api\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
+              networkTimeoutSeconds: 10,
               expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 // 24 horas
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 días
               },
               cacheableResponse: {
                 statuses: [0, 200]
               }
             }
           },
+          // Imágenes de productos - CacheFirst
           {
             urlPattern: /\.(png|jpg|jpeg|svg|gif|webp)$/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'images-cache',
               expiration: {
-                maxEntries: 200,
+                maxEntries: 500,
+                maxAgeSeconds: 60 * 60 * 24 * 90 // 90 días
+              }
+            }
+          },
+          // Fuentes - CacheFirst
+          {
+            urlPattern: /\.(woff|woff2|ttf|eot)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'fonts-cache',
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 año
+              }
+            }
+          },
+          // CDN externos - StaleWhileRevalidate
+          {
+            urlPattern: /^https:\/\/.*/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'external-cache',
+              expiration: {
+                maxEntries: 100,
                 maxAgeSeconds: 60 * 60 * 24 * 30 // 30 días
               }
             }
