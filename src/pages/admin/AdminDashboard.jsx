@@ -172,6 +172,35 @@ const AdminDashboard = () => {
         </div>
       </div>
 
+      {/* Tarjeta de acceso rápido a Predicciones ML */}
+      <div className="mb-8">
+        <Link
+          to="/admin/predictions"
+          className="block bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
+        >
+          <div className="p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="p-4 bg-white bg-opacity-20 rounded-lg backdrop-blur-sm">
+                <Brain className="h-12 w-12 text-white" />
+              </div>
+              <div className="text-white">
+                <h2 className="text-2xl md:text-3xl font-bold mb-2">Predicciones con Machine Learning</h2>
+                <p className="text-purple-100 text-sm md:text-base">
+                  📊 Gráficas interactivas • 🤖 Análisis con IA • 📈 Pronóstico 30 días
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <button className="px-8 py-4 bg-white text-purple-600 rounded-lg font-bold text-lg hover:bg-gray-100 transition-colors shadow-lg flex items-center gap-2">
+                Ver Predicciones
+                <ArrowUp className="h-5 w-5 rotate-90" />
+              </button>
+              <span className="text-purple-200 text-xs">Powered by Random Forest</span>
+            </div>
+          </div>
+        </Link>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Productos más vendidos */}
         <div className="bg-white rounded-lg shadow-md p-6">
