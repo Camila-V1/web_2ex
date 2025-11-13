@@ -46,6 +46,7 @@ import AdminProducts from './pages/admin/AdminProducts';
 import AdminCategories from './pages/admin/AdminCategories';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminAudit from './pages/admin/AdminAudit';
+import AdminPredictions from './pages/admin/AdminPredictions';
 
 import './App.css';
 
@@ -226,6 +227,14 @@ function App() {
                 element={
                   <ProtectedAdminRoute>
                     <AdminAudit />
+                  </ProtectedAdminRoute>
+                } 
+              />
+              <Route 
+                path="/admin/predictions" 
+                element={
+                  <ProtectedAdminRoute>
+                    <AdminPredictions />
                   </ProtectedAdminRoute>
                 } 
               />

@@ -38,8 +38,9 @@ const Header = () => {
     { name: 'Usuarios', href: '/admin/users' },
     { name: 'Reportes', href: '/admin/reports' },
     { name: '🤖 Reportes IA', href: '/admin/ai-reports' },
-    { name: '� Devoluciones', href: '/manager/returns' },
-    { name: '�📋 Auditoría', href: '/admin/audit' },
+    { name: '📊 Predicciones', href: '/admin/predictions' },
+    { name: '🔄 Devoluciones', href: '/manager/returns' },
+    { name: '📋 Auditoría', href: '/admin/audit' },
   ] : hasRole && hasRole('CAJERO') ? [
     // Para CAJERO (solo productos y carrito, sin devoluciones)
     { name: 'Productos', href: '/products' },
