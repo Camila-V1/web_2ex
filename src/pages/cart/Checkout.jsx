@@ -79,20 +79,21 @@ const Checkout = () => {
 
       // 1. Crear la orden en el backend
       const cartData = getCartForAPI();
+      
+      // Agregar método de pago a los datos
+      if (paymentMethod === 'wallet' && useWalletAmount >= subtotalWithTax) {
+        cartData.payment_method = 'wallet';
+      }
+      
       console.log('💳 Datos del carrito para API:', cartData);
       console.log('💰 Método de pago:', paymentMethod, '- Monto billetera:', useWalletAmount);
       
       const order = await orderService.createOrder(cartData);
       console.log('✅ Orden creada:', order);
 
-      // 2. Si usa billetera y el total está cubierto, marcar como pagado
-      if (paymentMethod === 'wallet' && useWalletAmount >= subtotalWithTax) {
+      // 2. Si usó billetera y el backend marcó como pagado, ir a success
+      if (order.paid_with_wallet || order.status === 'PAID') {
         console.log('🎯 Pago completo con billetera virtual');
-        
-        // TODO: Crear endpoint en backend para pagar con billetera
-        // Por ahora, continuamos con el flujo normal de Stripe
-        // El backend debería manejar esto automáticamente
-        
         clearCart();
         navigate(`/payment-success?order_id=${order.id}&paid_with_wallet=true`);
         return;
