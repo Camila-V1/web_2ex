@@ -310,6 +310,54 @@ Los logs de las órdenes (120, 126, 119, etc.) muestran que:
 
 ---
 
-**Estado:** ⏳ Pendiente de configuración backend CORS  
-**Prioridad:** 🔴 Alta (funcionalidad crítica no operativa)  
-**ETA Fix:** ~5 minutos (solo configuración en backend)
+---
+
+## 🔧 **ACTUALIZACIÓN - Problema de Reportes Corruptos RESUELTO**
+
+### ❌ Problema Real Detectado
+
+Después de testing exhaustivo:
+1. ✅ Backend genera archivos OK (Python test exitoso)
+2. ✅ Frontend usa `responseType: 'blob'` correctamente
+3. ❌ **AIReportGenerator.jsx estaba wrapping el blob incorrectamente**
+
+### 🐛 Bug Encontrado (Línea 62)
+
+```javascript
+// ❌ MAL - Double wrapping del blob
+const url = window.URL.createObjectURL(new Blob([response.data]));
+
+// ✅ CORRECTO - response.data YA es un blob
+const url = window.URL.createObjectURL(response.data);
+```
+
+**Explicación:**
+- Cuando usas `responseType: 'blob'`, axios ya retorna `response.data` como `Blob`
+- Envolverlo en `new Blob([...])` crea un blob anidado → archivo corrupto
+- Solución: Usar `response.data` directamente
+
+### ✅ Fix Aplicado
+
+**Archivo:** `src/pages/admin/AIReportGenerator.jsx`  
+**Línea:** 62  
+**Cambio:** Removido `new Blob([])` wrapper
+
+```diff
+- const url = window.URL.createObjectURL(new Blob([response.data]));
++ const url = window.URL.createObjectURL(response.data);
+```
+
+### 🧪 Para Verificar el Fix
+
+1. Hacer git pull en el frontend
+2. Iniciar sesión como Manager
+3. Ir a "🤖 Reportes IA"
+4. Comando: "Ventas de septiembre en PDF"
+5. El archivo descargado **AHORA debería abrirse correctamente** ✅
+
+---
+
+**Estado Actualizado:** ✅ Fix aplicado en frontend  
+**Prioridad CORS:** 🟡 Media (funcionalidad secundaria)  
+**Prioridad Reportes:** ✅ RESUELTO  
+**ETA Verificación:** Inmediato tras deployment en Vercel

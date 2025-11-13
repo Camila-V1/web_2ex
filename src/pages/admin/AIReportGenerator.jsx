@@ -58,7 +58,8 @@ const AIReportGenerator = () => {
       }
 
       // Crear enlace de descarga
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      // FIX: response.data YA es un Blob, no necesita new Blob([...])
+      const url = window.URL.createObjectURL(response.data);
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', filename);
