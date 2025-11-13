@@ -476,9 +476,147 @@ const isCajero = () => {
 
 ---
 
+## 📄 **ACTUALIZACIÓN - Paginación Implementada para Rendimiento**
+
+### 🎯 Problema de Rendimiento
+
+**Síntoma reportado por usuario:**
+- "tarda en cargaar no es mejor dividilo en paginas 1,2"
+- Las páginas con muchas órdenes tardaban en renderizar
+- Sin paginación, todas las órdenes se mostraban a la vez
+- Experiencia de usuario lenta, especialmente con 50+ órdenes
+
+### ✅ Solución Implementada
+
+**Se agregó paginación client-side en dos componentes principales:**
+
+#### 1. **AdminOrders.jsx** - Paginación Completa
+
+**Características implementadas:**
+- ✅ Selector de items por página (5, 10, 20, 50)
+- ✅ Navegación con botones Anterior/Siguiente
+- ✅ Números de página con scroll suave
+- ✅ Indicador de rango actual (mostrando X - Y de Z órdenes)
+- ✅ Smart pagination: muestra páginas relevantes + "..." para omitidas
+- ✅ Scroll automático al top al cambiar de página
+
+**Código agregado:**
+```javascript
+// Estado de paginación
+const [currentPage, setCurrentPage] = useState(1);
+const [itemsPerPage, setItemsPerPage] = useState(10);
+
+// Cálculo de órdenes a mostrar
+const indexOfLastOrder = currentPage * itemsPerPage;
+const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
+const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
+const totalPages = Math.ceil(orders.length / itemsPerPage);
+```
+
+**UI Components:**
+- Selector dropdown para items por página
+- Botones de navegación con iconos Lucide (`ChevronLeft`, `ChevronRight`)
+- Números de página con estado activo destacado (indigo)
+- Estados disabled para botones cuando no hay más páginas
+
+#### 2. **AdminDashboard.jsx** - Paginación de Órdenes Recientes
+
+**Características implementadas:**
+- ✅ Paginación automática para tabla de órdenes recientes
+- ✅ 5 órdenes por página (optimizado para dashboard)
+- ✅ Navegación Anterior/Siguiente
+- ✅ Indicador de página actual (X / Y)
+- ✅ Contador de items mostrados
+
+**Código agregado:**
+```javascript
+// Estado de paginación para órdenes recientes
+const [ordersPage, setOrdersPage] = useState(1);
+const ordersPerPage = 5;
+
+// Aplicar paginación en el render
+stats?.recent_orders
+  ?.slice((ordersPage - 1) * ordersPerPage, ordersPage * ordersPerPage)
+  .map((order) => { /* ... */ })
+```
+
+**UI Components:**
+- Controles compactos debajo de la tabla
+- Texto informativo de rango de items
+- Botones con estados disabled
+- Solo se muestra si hay más de 5 órdenes
+
+#### 3. **AdminReports.jsx** - Ya Optimizado
+
+Los previews de reportes **ya usaban lazy loading**:
+- ✅ Datos solo se cargan al hacer click en "Vista Previa"
+- ✅ Estado `loadingPreview` para feedback visual
+- ✅ Modales solo renderizan cuando `showSalesPreview` o `showProductsPreview` es `true`
+
+### 📊 Mejoras de Rendimiento
+
+**Antes:**
+- AdminOrders: Renderizaba 100+ órdenes a la vez → lag visible
+- AdminDashboard: Mostraba todas las órdenes recientes → tabla gigante
+- Scroll infinito hasta encontrar la orden deseada
+
+**Después:**
+- AdminOrders: Renderiza máximo 50 órdenes a la vez (configurable)
+- AdminDashboard: Renderiza solo 5 órdenes por página
+- Navegación intuitiva con feedback visual claro
+- Scroll automático al cambiar página
+
+### 🎨 Experiencia de Usuario
+
+**Navegación mejorada:**
+```
+[< Anterior]  [1]  [2]  [3]  ...  [10]  [Siguiente >]
+           Página 2 de 10
+```
+
+**Selector de densidad:**
+```
+Mostrar: [10 ▼] por página
+```
+
+**Indicador de progreso:**
+```
+Mostrando 11 - 20 de 157 órdenes
+```
+
+### 🚀 Ventajas de la Implementación
+
+1. **Client-side pagination:** No requiere cambios en el backend
+2. **Configurable:** Usuario puede ajustar items por página según preferencia
+3. **Responsive:** Funciona en mobile y desktop
+4. **Accesible:** Estados disabled claros, feedback visual
+5. **Performance:** Reduce drásticamente el DOM renderizado
+6. **UX:** Scroll automático, números de página intuitivos
+
+### 🧪 Para Verificar
+
+1. **Ir a `/admin/orders`:**
+   - Verificar selector "Mostrar: X por página"
+   - Cambiar entre 5, 10, 20, 50 items
+   - Navegar con botones Anterior/Siguiente
+   - Hacer click en números de página específicos
+
+2. **Ir a `/admin/dashboard`:**
+   - Scroll hasta "Órdenes Recientes"
+   - Verificar paginación si hay más de 5 órdenes
+   - Navegar entre páginas
+
+3. **Performance:**
+   - Tiempo de carga inicial más rápido
+   - Scroll suave al cambiar página
+   - Sin lag al renderizar
+
+---
+
 **Estado Actualizado:** ✅ Todos los fixes aplicados  
 **Commit:** f5072c5 - "fix(roles): MANAGER ya NO tiene acceso admin"  
 **Deployed:** Vercel está desplegando (2-3 min)  
 **Prioridad CORS:** 🟡 Media (pendiente backend)  
 **Prioridad Roles:** ✅ RESUELTO  
-**Prioridad Reportes:** ✅ RESUELTO
+**Prioridad Reportes:** ✅ RESUELTO  
+**Prioridad Paginación:** ✅ RESUELTO

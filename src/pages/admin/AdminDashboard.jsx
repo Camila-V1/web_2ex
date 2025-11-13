@@ -22,6 +22,10 @@ const AdminDashboard = () => {
   const [loadingPredictions, setLoadingPredictions] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // 📄 Paginación para órdenes recientes
+  const [ordersPage, setOrdersPage] = useState(1);
+  const ordersPerPage = 5;
 
   useEffect(() => {
     fetchDashboard();
@@ -451,39 +455,77 @@ const AdminDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {stats?.recent_orders?.map((order) => {
-                const statusColors = {
-                  pending: 'bg-yellow-100 text-yellow-800',
-                  paid: 'bg-green-100 text-green-800',
-                  shipped: 'bg-blue-100 text-blue-800',
-                  delivered: 'bg-purple-100 text-purple-800',
-                  cancelled: 'bg-red-100 text-red-800'
-                };
+              {stats?.recent_orders
+                ?.slice((ordersPage - 1) * ordersPerPage, ordersPage * ordersPerPage)
+                .map((order) => {
+                  const statusColors = {
+                    pending: 'bg-yellow-100 text-yellow-800',
+                    paid: 'bg-green-100 text-green-800',
+                    shipped: 'bg-blue-100 text-blue-800',
+                    delivered: 'bg-purple-100 text-purple-800',
+                    cancelled: 'bg-red-100 text-red-800'
+                  };
 
-                return (
-                  <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 text-sm font-medium text-gray-900">
-                      #{order.id}
-                    </td>
-                    <td className="py-3 text-sm text-gray-600">
-                      Usuario {order.user}
-                    </td>
-                    <td className="py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="py-3 text-sm font-medium text-gray-900 text-right">
-                      ${parseFloat(order.total_amount).toFixed(2)}
-                    </td>
-                    <td className="py-3 text-sm text-gray-600 text-right">
-                      {new Date(order.created_at).toLocaleDateString('es-ES')}
-                    </td>
-                  </tr>
-                );
-              })}
+                  return (
+                    <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 text-sm font-medium text-gray-900">
+                        #{order.id}
+                      </td>
+                      <td className="py-3 text-sm text-gray-600">
+                        Usuario {order.user}
+                      </td>
+                      <td className="py-3">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="py-3 text-sm font-medium text-gray-900 text-right">
+                        ${parseFloat(order.total_amount).toFixed(2)}
+                      </td>
+                      <td className="py-3 text-sm text-gray-600 text-right">
+                        {new Date(order.created_at).toLocaleDateString('es-ES')}
+                      </td>
+                    </tr>
+                  );
+                })}
             </tbody>
           </table>
+          
+          {/* 📄 Paginación de órdenes recientes */}
+          {stats?.recent_orders && stats.recent_orders.length > ordersPerPage && (
+            <div className="mt-4 flex items-center justify-between px-4">
+              <div className="text-sm text-gray-600">
+                Mostrando {((ordersPage - 1) * ordersPerPage) + 1} - {Math.min(ordersPage * ordersPerPage, stats.recent_orders.length)} de {stats.recent_orders.length} órdenes
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setOrdersPage(p => Math.max(1, p - 1))}
+                  disabled={ordersPage === 1}
+                  className={`px-3 py-1 rounded text-sm font-medium ${
+                    ordersPage === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  Anterior
+                </button>
+                <span className="px-3 py-1 text-sm text-gray-600">
+                  {ordersPage} / {Math.ceil(stats.recent_orders.length / ordersPerPage)}
+                </span>
+                <button
+                  onClick={() => setOrdersPage(p => Math.min(Math.ceil(stats.recent_orders.length / ordersPerPage), p + 1))}
+                  disabled={ordersPage >= Math.ceil(stats.recent_orders.length / ordersPerPage)}
+                  className={`px-3 py-1 rounded text-sm font-medium ${
+                    ordersPage >= Math.ceil(stats.recent_orders.length / ordersPerPage)
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  Siguiente
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
