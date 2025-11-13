@@ -19,7 +19,7 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   
-  const { user, isAuthenticated, logout, isAdmin, hasRole } = useAuth();
+  const { user, isAuthenticated, logout, isAdmin, isManager, isCajero, hasRole } = useAuth();
   const { totalItems } = useCart();
   const navigate = useNavigate();
 
@@ -31,7 +31,7 @@ const Header = () => {
 
   // Navegación diferente para admin vs manager vs cajero vs usuarios regulares
   const navigation = isAdmin() ? [
-    // Solo para ADMIN y MANAGER
+    // SOLO para ADMIN (control total)
     { name: 'Dashboard', href: '/admin/dashboard' },
     { name: 'Productos', href: '/admin/products' },
     { name: 'Órdenes', href: '/admin/orders' },
@@ -41,9 +41,18 @@ const Header = () => {
     { name: '📊 Predicciones', href: '/admin/predictions' },
     { name: '🔄 Devoluciones', href: '/manager/returns' },
     { name: '📋 Auditoría', href: '/admin/audit' },
-  ] : hasRole && hasRole('CAJERO') ? [
-    // Para CAJERO (solo productos y carrito, sin devoluciones)
+  ] : isManager() ? [
+    // Para MANAGER (dashboard, reportes, predicciones, clientes - SIN usuarios/productos/categorías)
+    { name: 'Dashboard', href: '/admin/dashboard' },
+    { name: 'Reportes', href: '/admin/reports' },
+    { name: '🤖 Reportes IA', href: '/admin/ai-reports' },
+    { name: '📊 Predicciones', href: '/admin/predictions' },
+    { name: '🔄 Devoluciones', href: '/manager/returns' },
+    { name: 'Órdenes', href: '/admin/orders' },
+  ] : isCajero() ? [
+    // Para CAJERO (crear órdenes, ver ventas)
     { name: 'Productos', href: '/products' },
+    { name: 'Órdenes', href: '/cajero/orders' },
   ] : [
     // Para clientes regulares
     { name: 'Inicio', href: '/' },
@@ -53,7 +62,7 @@ const Header = () => {
   ];
 
   // Logo redirige según tipo de usuario
-  const logoHref = isAdmin() ? '/admin/dashboard' : '/';
+  const logoHref = isAdmin() || isManager() ? '/admin/dashboard' : '/';
 
   return (
     <header className="bg-white shadow-lg border-b border-gray-200">
@@ -103,13 +112,13 @@ const Header = () => {
             {/* Botón de instalación PWA */}
             <PWAInstallButton />
 
-            {/* Wallet Widget - Solo visible para usuarios NO admin autenticados */}
-            {isAuthenticated && !isAdmin() && (
+            {/* Wallet Widget - Solo visible para usuarios NO admin/manager autenticados */}
+            {isAuthenticated && !isAdmin() && !isManager() && (
               <WalletWidget />
             )}
 
-            {/* Carrito - Solo visible para usuarios NO admin */}
-            {!isAdmin() && (
+            {/* Carrito - Solo visible para usuarios NO admin/manager */}
+            {!isAdmin() && !isManager() && (
               <Link
                 to="/cart"
                 className="relative p-2 text-gray-600 hover:text-indigo-600 transition-colors duration-200"
@@ -142,8 +151,8 @@ const Header = () => {
                 {isUserMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50">
                     <div className="py-1">
-                      {/* Opciones para usuarios regulares */}
-                      {!isAdmin() && (
+                      {/* Opciones para usuarios regulares (NO admin, NO manager) */}
+                      {!isAdmin() && !isManager() && (
                         <>
                           <Link
                             to="/profile"
@@ -187,15 +196,15 @@ const Header = () => {
                         </>
                       )}
 
-                      {/* Opción para admin */}
-                      {isAdmin() && (
+                      {/* Opción para admin y manager */}
+                      {(isAdmin() || isManager()) && (
                         <Link
                           to="/admin/dashboard"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           <BarChart3 className="h-4 w-4 mr-3" />
-                          Dashboard Admin
+                          Dashboard {isAdmin() ? 'Admin' : 'Manager'}
                         </Link>
                       )}
 
@@ -278,8 +287,8 @@ const Header = () => {
                 <>
                   <hr className="my-2" />
                   
-                  {/* Opciones para usuarios regulares */}
-                  {!isAdmin() && (
+                  {/* Opciones para usuarios regulares (NO admin, NO manager) */}
+                  {!isAdmin() && !isManager() && (
                     <>
                       <Link
                         to="/profile"
@@ -298,14 +307,14 @@ const Header = () => {
                     </>
                   )}
                   
-                  {/* Opción para admin */}
-                  {isAdmin() && (
+                  {/* Opción para admin y manager */}
+                  {(isAdmin() || isManager()) && (
                     <Link
                       to="/admin/dashboard"
                       className="text-gray-700 hover:text-indigo-600 block px-3 py-2 text-base font-medium transition-colors duration-200"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      Dashboard Admin
+                      Dashboard {isAdmin() ? 'Admin' : 'Manager'}
                     </Link>
                   )}
                 </>

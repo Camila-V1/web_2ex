@@ -5,7 +5,7 @@ import { CartProvider } from './contexts/CartContext';
 import Layout from './components/layout/Layout';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
-import ProtectedManagerRoute from './components/manager/ProtectedManagerRoute';
+import ProtectedManagerRoute from './components/ProtectedManagerRoute'; // Nuevo: acceso para ADMIN + MANAGER
 
 // Pages
 import Home from './pages/Home';
@@ -168,28 +168,30 @@ function App() {
                 } 
               />
               
-              {/* Rutas protegidas para administradores */}
+              {/* Rutas para ADMIN + MANAGER (dashboard, reportes, predicciones, órdenes) */}
               <Route 
                 path="/admin/dashboard" 
                 element={
-                  <ProtectedAdminRoute>
+                  <ProtectedManagerRoute>
                     <AdminDashboard />
-                  </ProtectedAdminRoute>
-                } 
-              />
-              <Route 
-                path="/admin/products" 
-                element={
-                  <ProtectedAdminRoute>
-                    <AdminProducts />
-                  </ProtectedAdminRoute>
+                  </ProtectedManagerRoute>
                 } 
               />
               <Route 
                 path="/admin/orders" 
                 element={
-                  <ProtectedAdminRoute>
+                  <ProtectedManagerRoute>
                     <AdminOrders />
+                  </ProtectedManagerRoute>
+                } 
+              />
+              
+              {/* Rutas SOLO para ADMIN (control total: usuarios, productos, categorías) */}
+              <Route 
+                path="/admin/products" 
+                element={
+                  <ProtectedAdminRoute>
+                    <AdminProducts />
                   </ProtectedAdminRoute>
                 } 
               />
@@ -209,35 +211,38 @@ function App() {
                   </ProtectedAdminRoute>
                 } 
               />
+              {/* Reportes, IA y Predicciones: accesibles para ADMIN + MANAGER */}
               <Route 
                 path="/admin/reports" 
                 element={
-                  <ProtectedAdminRoute>
+                  <ProtectedManagerRoute>
                     <AdminReports />
-                  </ProtectedAdminRoute>
+                  </ProtectedManagerRoute>
                 } 
               />
               <Route 
                 path="/admin/ai-reports" 
                 element={
-                  <ProtectedAdminRoute>
+                  <ProtectedManagerRoute>
                     <AIReportGenerator />
-                  </ProtectedAdminRoute>
-                } 
-              />
-              <Route 
-                path="/admin/audit" 
-                element={
-                  <ProtectedAdminRoute>
-                    <AdminAudit />
-                  </ProtectedAdminRoute>
+                  </ProtectedManagerRoute>
                 } 
               />
               <Route 
                 path="/admin/predictions" 
                 element={
-                  <ProtectedAdminRoute>
+                  <ProtectedManagerRoute>
                     <AdminPredictions />
+                  </ProtectedManagerRoute>
+                } 
+              />
+              
+              {/* Auditoría: SOLO para ADMIN */}
+              <Route 
+                path="/admin/audit" 
+                element={
+                  <ProtectedAdminRoute>
+                    <AdminAudit />
                   </ProtectedAdminRoute>
                 } 
               />

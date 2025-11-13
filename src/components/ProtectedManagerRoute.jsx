@@ -4,11 +4,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { ShieldAlert } from 'lucide-react';
 
 /**
- * Ruta protegida para SOLO ADMIN (control total del sistema)
- * Para rutas accesibles por ADMIN + MANAGER, usar ProtectedManagerRoute
+ * Ruta protegida para ADMIN + MANAGER
+ * Permite acceso a funcionalidades de gestión (dashboard, reportes, predicciones, clientes)
  */
-const ProtectedAdminRoute = ({ children }) => {
-  const { user, isAuthenticated, isLoading, isAdmin } = useAuth();
+const ProtectedManagerRoute = ({ children }) => {
+  const { user, isAuthenticated, isLoading, isAdmin, isManager } = useAuth();
 
   // Mientras está cargando, mostrar loader
   if (isLoading) {
@@ -16,7 +16,7 @@ const ProtectedAdminRoute = ({ children }) => {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
-          <p className="text-gray-600">Verificando permisos de administrador...</p>
+          <p className="text-gray-600">Verificando permisos de gestión...</p>
         </div>
       </div>
     );
@@ -27,8 +27,8 @@ const ProtectedAdminRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Si no es ADMIN (solo ADMIN, NO MANAGER), mostrar mensaje de acceso denegado
-  if (!isAdmin()) {
+  // Si no es ADMIN ni MANAGER, mostrar mensaje de acceso denegado
+  if (!isAdmin() && !isManager()) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
@@ -39,10 +39,10 @@ const ProtectedAdminRoute = ({ children }) => {
             Acceso Denegado
           </h2>
           <p className="text-gray-600 mb-6">
-            Se requieren permisos de <strong>ADMINISTRADOR</strong> para acceder a esta página.
-            {user?.role === 'MANAGER' && (
+            Se requieren permisos de <strong>MANAGER</strong> o <strong>ADMINISTRADOR</strong> para acceder a esta página.
+            {user?.role && (
               <span className="block mt-2 text-sm">
-                (Tu rol actual: <strong>MANAGER</strong>)
+                (Tu rol actual: <strong>{user.role}</strong>)
               </span>
             )}
           </p>
@@ -54,10 +54,10 @@ const ProtectedAdminRoute = ({ children }) => {
               Volver
             </button>
             <button
-              onClick={() => window.location.href = '/admin/dashboard'}
+              onClick={() => window.location.href = '/products'}
               className="w-full bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors"
             >
-              Ir al Dashboard
+              Ir a Productos
             </button>
           </div>
         </div>
@@ -65,8 +65,8 @@ const ProtectedAdminRoute = ({ children }) => {
     );
   }
 
-  // Si es ADMIN, permitir acceso
+  // Si es ADMIN o MANAGER, permitir acceso
   return children;
 };
 
-export default ProtectedAdminRoute;
+export default ProtectedManagerRoute;

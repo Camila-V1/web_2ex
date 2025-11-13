@@ -228,11 +228,29 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: authActions.CLEAR_ERROR });
   };
 
-  // Verificar si el usuario es admin O manager (acceso completo al panel admin)
+  // Verificar si el usuario es SOLO ADMIN (control total del sistema)
   const isAdmin = () => {
     const role = state.user?.role;
-    const result = role === 'ADMIN' || role === 'MANAGER';
-    console.log('🔍 [AUTH] isAdmin() - role:', role, '| result:', result);
+    const isStaff = state.user?.is_staff;
+    // Solo ADMIN tiene acceso completo (usuarios, productos, categorías, etc.)
+    const result = role === 'ADMIN' && isStaff === true;
+    console.log('🔍 [AUTH] isAdmin() - role:', role, '| is_staff:', isStaff, '| result:', result);
+    return result;
+  };
+
+  // Verificar si el usuario es Manager (dashboard, reportes, predicciones, clientes)
+  const isManager = () => {
+    const role = state.user?.role;
+    const result = role === 'MANAGER' || role === 'ADMIN'; // ADMIN también puede acceder a funciones de Manager
+    console.log('🔍 [AUTH] isManager() - role:', role, '| result:', result);
+    return result;
+  };
+
+  // Verificar si el usuario es Cajero (crear órdenes, ver historial ventas)
+  const isCajero = () => {
+    const role = state.user?.role;
+    const result = role === 'CAJERO' || role === 'MANAGER' || role === 'ADMIN';
+    console.log('🔍 [AUTH] isCajero() - role:', role, '| result:', result);
     return result;
   };
 
@@ -259,7 +277,9 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     clearError,
-    isAdmin,
+    isAdmin,      // Solo ADMIN (control total)
+    isManager,    // MANAGER + ADMIN
+    isCajero,     // CAJERO + MANAGER + ADMIN
     hasRole,
     hasPermission,
   };
