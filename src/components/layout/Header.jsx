@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
 import WalletWidget from '../wallet/WalletWidget';
+import PWAInstallButton from '../common/PWAInstallButton';
 import { 
   ShoppingCart, 
   User, 
@@ -98,6 +99,9 @@ const Header = () => {
 
           {/* Acciones del usuario */}
           <div className="flex items-center space-x-4">
+            {/* Botón de instalación PWA */}
+            <PWAInstallButton />
+
             {/* Wallet Widget - Solo visible para usuarios NO admin autenticados */}
             {isAuthenticated && !isAdmin() && (
               <WalletWidget />
