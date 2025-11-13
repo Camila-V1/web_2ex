@@ -357,7 +357,128 @@ const url = window.URL.createObjectURL(response.data);
 
 ---
 
-**Estado Actualizado:** ✅ Fix aplicado en frontend  
-**Prioridad CORS:** 🟡 Media (funcionalidad secundaria)  
-**Prioridad Reportes:** ✅ RESUELTO  
-**ETA Verificación:** Inmediato tras deployment en Vercel
+---
+
+## 🎯 **ACTUALIZACIÓN FINAL - Separación de Roles ADMIN vs MANAGER**
+
+### ❌ Problema Crítico Detectado
+
+**Manager estaba viendo funcionalidades de Admin** porque `isAdmin()` retornaba `true` para ambos roles:
+
+```javascript
+// ❌ ANTES - INCORRECTO
+const isAdmin = () => {
+  const role = state.user?.role;
+  const result = role === 'ADMIN' || role === 'MANAGER'; // Manager tiene acceso total!
+  return result;
+};
+```
+
+**Impacto:**
+- Manager podía ver/editar Usuarios
+- Manager podía ver/editar Productos  
+- Manager podía ver/editar Categorías
+- Manager podía ver Auditoría
+- NO se respetaban los permisos del sistema de roles RBAC
+
+### ✅ Solución Implementada
+
+**Archivo:** `src/contexts/AuthContext.jsx`  
+**Cambios:** Separación clara de funciones por rol
+
+```javascript
+// ✅ AHORA - CORRECTO
+// Solo ADMIN tiene control total
+const isAdmin = () => {
+  const role = state.user?.role;
+  const isStaff = state.user?.is_staff;
+  const result = role === 'ADMIN' && isStaff === true;
+  return result;
+};
+
+// Manager puede acceder a dashboard, reportes, predicciones
+const isManager = () => {
+  const role = state.user?.role;
+  const result = role === 'MANAGER' || role === 'ADMIN';
+  return result;
+};
+
+// Cajero puede crear órdenes y ver ventas
+const isCajero = () => {
+  const role = state.user?.role;
+  const result = role === 'CAJERO' || role === 'MANAGER' || role === 'ADMIN';
+  return result;
+};
+```
+
+### 📋 Permisos Correctos por Rol
+
+| Funcionalidad | ADMIN | MANAGER | CAJERO | Cliente |
+|--------------|-------|---------|--------|---------|
+| **Dashboard** | ✅ | ✅ | ❌ | ❌ |
+| **Reportes** | ✅ | ✅ | ❌ | ❌ |
+| **Reportes IA** | ✅ | ✅ | ❌ | ❌ |
+| **Predicciones ML** | ✅ | ✅ | ❌ | ❌ |
+| **Ver Órdenes** | ✅ | ✅ | ✅ | Solo propias |
+| **Usuarios (CRUD)** | ✅ | ❌ | ❌ | ❌ |
+| **Productos (CRUD)** | ✅ | ❌ | ❌ | ❌ |
+| **Categorías (CRUD)** | ✅ | ❌ | ❌ | ❌ |
+| **Auditoría** | ✅ | ❌ | ❌ | ❌ |
+| **Devoluciones** | ✅ | ✅ | ❌ | Solo propias |
+
+### � Archivos Modificados
+
+1. **`src/contexts/AuthContext.jsx`**
+   - Agregado `isManager()` y `isCajero()`
+   - `isAdmin()` ahora solo valida `ADMIN + is_staff`
+   - Exportadas nuevas funciones en el context
+
+2. **`src/components/ProtectedManagerRoute.jsx`** (NUEVO)
+   - Guard para rutas accesibles por ADMIN + MANAGER
+   - Muestra mensaje específico si no tiene permisos
+
+3. **`src/components/ProtectedAdminRoute.jsx`**
+   - Actualizado para validar SOLO `isAdmin()`
+   - Mensaje mejorado indicando que se requiere rol ADMIN
+
+4. **`src/components/layout/Header.jsx`**
+   - Navegación separada por roles
+   - Manager NO ve links de Usuarios/Productos/Categorías/Auditoría
+   - Wallet y Carrito NO visibles para Admin ni Manager
+
+5. **`src/App.jsx`**
+   - Rutas protegidas con `ProtectedManagerRoute` para Manager
+   - Rutas protegidas con `ProtectedAdminRoute` solo para Admin
+   - Dashboard, Reportes, Predicciones: `ProtectedManagerRoute`
+   - Usuarios, Productos, Categorías, Auditoría: `ProtectedAdminRoute`
+
+### 🧪 Para Verificar el Fix
+
+1. **Iniciar sesión como Manager:**
+   ```
+   Username: carlos_manager
+   Password: carlos123
+   ```
+
+2. **Verificar navegación:**
+   - ✅ Debe ver: Dashboard, Reportes, Reportes IA, Predicciones, Órdenes, Devoluciones
+   - ❌ NO debe ver: Usuarios, Productos, Categorías, Auditoría
+
+3. **Intentar acceder manualmente a rutas admin:**
+   - `/admin/users` → Debe mostrar "Acceso Denegado"
+   - `/admin/products` → Debe mostrar "Acceso Denegado"
+   - `/admin/categories` → Debe mostrar "Acceso Denegado"
+   - `/admin/audit` → Debe mostrar "Acceso Denegado"
+
+4. **Verificar console logs:**
+   - `isAdmin()` con role MANAGER debe retornar `false`
+   - `isManager()` con role MANAGER debe retornar `true`
+
+---
+
+**Estado Actualizado:** ✅ Todos los fixes aplicados  
+**Commit:** f5072c5 - "fix(roles): MANAGER ya NO tiene acceso admin"  
+**Deployed:** Vercel está desplegando (2-3 min)  
+**Prioridad CORS:** 🟡 Media (pendiente backend)  
+**Prioridad Roles:** ✅ RESUELTO  
+**Prioridad Reportes:** ✅ RESUELTO
