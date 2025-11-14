@@ -11,6 +11,11 @@ const AIReportGenerator = () => {
   const [lastCommand, setLastCommand] = useState('');
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  
+  // 📅 Fechas opcionales (se agregan automáticamente al comando)
+  const [useDateRange, setUseDateRange] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   // Obtener headers de autenticación
   const getAuthHeaders = () => {
@@ -30,14 +35,22 @@ const AIReportGenerator = () => {
     setIsGenerating(true);
     setError(null);
     setSuccess(false);
-    setLastCommand(userCommand);
+    
+    // 📅 Agregar fechas al comando si están seleccionadas
+    let finalCommand = userCommand;
+    if (useDateRange && startDate && endDate) {
+      finalCommand = `${userCommand} del ${startDate} al ${endDate}`;
+      console.log('📅 Comando con fechas:', finalCommand);
+    }
+    
+    setLastCommand(finalCommand);
 
     try {
-      console.log('🤖 Enviando comando:', userCommand);
+      console.log('🤖 Enviando comando:', finalCommand);
 
       const response = await axios.post(
         `${API_URL}/reports/dynamic-parser/`,
-        { prompt: userCommand },
+        { prompt: finalCommand },
         {
           headers: getAuthHeaders(),
           responseType: 'blob', // IMPORTANTE para descargas
@@ -145,10 +158,10 @@ const AIReportGenerator = () => {
 
   // Comandos de ejemplo
   const exampleCommands = [
-    'Quiero un reporte de ventas del mes de octubre en PDF',
+    'Reporte de ventas en PDF',
     'Dame el reporte de productos en excel',
-    'Genera ventas de septiembre en PDF',
-    'Reporte de ventas del 01/10/2025 al 15/10/2025 en excel',
+    'Genera ventas en PDF',
+    'Reporte de inventario en excel',
     'Necesito el inventario en PDF',
   ];
 
@@ -172,6 +185,50 @@ const AIReportGenerator = () => {
       {/* Formulario Principal */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Checkbox para usar rango de fechas */}
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              type="checkbox"
+              id="useDateRange"
+              checked={useDateRange}
+              onChange={(e) => setUseDateRange(e.target.checked)}
+              className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+            />
+            <label htmlFor="useDateRange" className="text-sm font-medium text-gray-700">
+              📅 Especificar rango de fechas (opcional)
+            </label>
+          </div>
+
+          {/* Selector de Fechas (opcional) */}
+          {useDateRange && (
+            <div className="grid grid-cols-2 gap-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+              <div>
+                <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">
+                  Fecha Inicio
+                </label>
+                <input
+                  type="date"
+                  id="startDate"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">
+                  Fecha Fin
+                </label>
+                <input
+                  type="date"
+                  id="endDate"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Input de Comando */}
           <div>
             <label htmlFor="command" className="block text-sm font-medium text-gray-700 mb-2">
@@ -280,9 +337,10 @@ const AIReportGenerator = () => {
         <ul className="space-y-2 text-sm text-blue-800">
           <li>• <strong>Tipos de reporte:</strong> Ventas o Productos/Inventario</li>
           <li>• <strong>Formatos:</strong> PDF o Excel</li>
-          <li>• <strong>Fechas:</strong> Puedes especificar mes, año, o rango exacto</li>
-          <li>• <strong>Comandos informales:</strong> No necesitas ser específico, el sistema entiende</li>
+          <li>• <strong>Fechas:</strong> Activa el checkbox "📅 Especificar rango de fechas" para seleccionarlas</li>
+          <li>• <strong>Comandos simples:</strong> "Ventas en PDF", "Productos en excel", etc.</li>
           <li>• <strong>Comando por voz:</strong> Click en el micrófono y habla tu comando</li>
+          <li>• <strong>Sin fechas:</strong> Si no especificas fechas, el sistema usa el mes actual</li>
         </ul>
       </div>
 
