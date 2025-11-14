@@ -29,28 +29,14 @@ export default function AdminOrders() {
     try {
       setLoading(true);
       const data = await adminService.getAllOrders();
-      console.log('🔍 [ADMIN ORDERS] Órdenes recibidas:', data);
-      console.log('🔍 [ADMIN ORDERS] Primera orden COMPLETA:', JSON.stringify(data[0], null, 2));
-      console.log('🔍 [ADMIN ORDERS] Todas las keys:', Object.keys(data[0] || {}));
       
-      // Si los items vienen vacíos, intentar cargar detalles de cada orden
-      const ordersWithDetails = await Promise.all(
-        data.map(async (order) => {
-          try {
-            // Intentar obtener detalles completos de la orden
-            const details = await adminService.getAdminOrder(order.id);
-            console.log(`🔍 [ORDER ${order.id}] Detalles:`, details);
-            return details;
-          } catch (error) {
-            console.warn(`⚠️ No se pudieron cargar detalles de orden ${order.id}`);
-            return order;
-          }
-        })
-      );
+      // ✅ Con la optimización del backend, los items ya vienen incluidos
+      console.log('🔍 [ADMIN ORDERS] Órdenes recibidas:', data.length);
+      console.log('🔍 [ADMIN ORDERS] Primera orden con items:', data[0]);
       
-      setOrders(ordersWithDetails);
+      setOrders(data);
     } catch (error) {
-      console.error('Error loading orders:', error);
+      console.error('❌ Error loading orders:', error);
       alert('❌ Error al cargar órdenes');
     } finally {
       setLoading(false);
@@ -208,12 +194,14 @@ export default function AdminOrders() {
 
             <div className="border-t pt-4">
               <h4 className="font-semibold mb-2">Productos:</h4>
-              {(order.items || order.order_items || []).length > 0 ? (
-                (order.items || order.order_items || []).map((item, idx) => (
+              {(order.items || []).length > 0 ? (
+                order.items.map((item, idx) => (
                   <div key={idx} className="flex justify-between py-2">
-                    <span>{item.product_name || item.name || `Producto #${item.product}`}</span>
+                    <span>
+                      {item.product?.name || item.product_name || `Producto #${item.product?.id || item.product}`}
+                    </span>
                     <span className="text-gray-600">
-                      {item.quantity} x ${parseFloat(item.price || item.unit_price || 0).toFixed(2)}
+                      {item.quantity} x ${parseFloat(item.price || 0).toFixed(2)}
                     </span>
                   </div>
                 ))
