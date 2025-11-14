@@ -28,13 +28,38 @@ export default function AdminOrders() {
   const loadOrders = async () => {
     try {
       setLoading(true);
-      const data = await adminService.getAllOrders();
       
-      // ✅ Con la optimización del backend, los items ya vienen incluidos
-      console.log('🔍 [ADMIN ORDERS] Órdenes recibidas:', data.length);
-      console.log('🔍 [ADMIN ORDERS] Primera orden con items:', data[0]);
+      // ✅ Manejar paginación del backend (100 órdenes por página)
+      let allOrders = [];
+      let nextUrl = null;
+      let page = 1;
       
-      setOrders(data);
+      do {
+        console.log(`📄 [ADMIN ORDERS] Cargando página ${page}...`);
+        const response = await adminService.getAllOrders(page);
+        
+        // Verificar si la respuesta es paginada o un array directo
+        if (response.results) {
+          // Respuesta paginada de DRF
+          allOrders.push(...response.results);
+          nextUrl = response.next;
+          console.log(`✅ Página ${page}: ${response.results.length} órdenes (Total: ${response.count})`);
+        } else if (Array.isArray(response)) {
+          // Respuesta directa (sin paginación)
+          allOrders = response;
+          nextUrl = null;
+        } else {
+          console.error('❌ Formato de respuesta inesperado:', response);
+          break;
+        }
+        
+        page++;
+      } while (nextUrl && page <= 50); // Límite de seguridad: máximo 50 páginas
+      
+      console.log(`✅ [ADMIN ORDERS] Total órdenes cargadas: ${allOrders.length}`);
+      console.log('🔍 [ADMIN ORDERS] Primera orden con items:', allOrders[0]);
+      
+      setOrders(allOrders);
     } catch (error) {
       console.error('❌ Error loading orders:', error);
       alert('❌ Error al cargar órdenes');

@@ -361,8 +361,8 @@ export const adminService = {
   },
 
   // Gestión de órdenes admin
-  getAllOrders: async () => {
-    const response = await api.get('orders/admin/');
+  getAllOrders: async (page = 1, pageSize = 100) => {
+    const response = await api.get(`orders/admin/?page=${page}&page_size=${pageSize}`);
     return response.data;
   },
 
