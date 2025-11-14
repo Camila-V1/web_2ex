@@ -12,8 +12,8 @@ const AIReportGenerator = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   
-  // 📅 Fechas opcionales (se agregan automáticamente al comando)
-  const [useDateRange, setUseDateRange] = useState(false);
+  // 📅 Selector de fechas opcional
+  const [useDates, setUseDates] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
@@ -32,13 +32,25 @@ const AIReportGenerator = () => {
       return;
     }
 
+    // Validar fechas si están activadas
+    if (useDates) {
+      if (!startDate || !endDate) {
+        setError('⚠️ Por favor selecciona ambas fechas');
+        return;
+      }
+      if (new Date(startDate) > new Date(endDate)) {
+        setError('❌ La fecha inicial debe ser menor que la fecha final');
+        return;
+      }
+    }
+
     setIsGenerating(true);
     setError(null);
     setSuccess(false);
     
-    // 📅 Agregar fechas al comando si están seleccionadas
+    // Agregar fechas al comando si están seleccionadas
     let finalCommand = userCommand;
-    if (useDateRange && startDate && endDate) {
+    if (useDates && startDate && endDate) {
       finalCommand = `${userCommand} del ${startDate} al ${endDate}`;
       console.log('📅 Comando con fechas:', finalCommand);
     }
@@ -159,10 +171,10 @@ const AIReportGenerator = () => {
   // Comandos de ejemplo
   const exampleCommands = [
     'Reporte de ventas en PDF',
-    'Dame el reporte de productos en excel',
-    'Genera ventas en PDF',
-    'Reporte de inventario en excel',
-    'Necesito el inventario en PDF',
+    'Ventas en excel',
+    'Dame el reporte de productos en PDF',
+    'Inventario en excel',
+    'Necesito el reporte de inventario en PDF',
   ];
 
   const useExample = (example) => {
@@ -185,22 +197,22 @@ const AIReportGenerator = () => {
       {/* Formulario Principal */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Checkbox para usar rango de fechas */}
+          {/* Checkbox para usar fechas */}
           <div className="flex items-center gap-2 mb-2">
             <input
               type="checkbox"
-              id="useDateRange"
-              checked={useDateRange}
-              onChange={(e) => setUseDateRange(e.target.checked)}
+              id="useDates"
+              checked={useDates}
+              onChange={(e) => setUseDates(e.target.checked)}
               className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
             />
-            <label htmlFor="useDateRange" className="text-sm font-medium text-gray-700">
+            <label htmlFor="useDates" className="text-sm font-medium text-gray-700">
               📅 Especificar rango de fechas (opcional)
             </label>
           </div>
 
-          {/* Selector de Fechas (opcional) */}
-          {useDateRange && (
+          {/* Selector de Fechas */}
+          {useDates && (
             <div className="grid grid-cols-2 gap-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
               <div>
                 <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">
@@ -337,10 +349,10 @@ const AIReportGenerator = () => {
         <ul className="space-y-2 text-sm text-blue-800">
           <li>• <strong>Tipos de reporte:</strong> Ventas o Productos/Inventario</li>
           <li>• <strong>Formatos:</strong> PDF o Excel</li>
-          <li>• <strong>Fechas:</strong> Activa el checkbox "📅 Especificar rango de fechas" para seleccionarlas</li>
+          <li>• <strong>Fechas:</strong> Activa "📅 Especificar rango de fechas" para seleccionar período específico</li>
+          <li>• <strong>Sin fechas:</strong> Si no especificas, el sistema usa datos del mes actual</li>
           <li>• <strong>Comandos simples:</strong> "Ventas en PDF", "Productos en excel", etc.</li>
           <li>• <strong>Comando por voz:</strong> Click en el micrófono y habla tu comando</li>
-          <li>• <strong>Sin fechas:</strong> Si no especificas fechas, el sistema usa el mes actual</li>
         </ul>
       </div>
 
