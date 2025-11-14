@@ -17,49 +17,36 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(null);
   
-  // 📄 Paginación
+  // 📄 Paginación del BACKEND (no frontend)
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const pageSize = 100; // Tamaño de página del backend
 
   useEffect(() => {
-    loadOrders();
-  }, []);
+    loadOrders(currentPage);
+  }, [currentPage]);
 
-  const loadOrders = async () => {
+  const loadOrders = async (page = 1) => {
     try {
       setLoading(true);
+      const response = await adminService.getAllOrders(page, pageSize);
       
-      // ✅ Manejar paginación del backend (100 órdenes por página)
-      let allOrders = [];
-      let nextUrl = null;
-      let page = 1;
-      
-      do {
-        console.log(`📄 [ADMIN ORDERS] Cargando página ${page}...`);
-        const response = await adminService.getAllOrders(page);
+      // Verificar si la respuesta es paginada de DRF
+      if (response.results) {
+        console.log(`📄 [ADMIN ORDERS] Página ${page}: ${response.results.length} órdenes`);
+        console.log(`📊 [ADMIN ORDERS] Total: ${response.count} órdenes`);
         
-        // Verificar si la respuesta es paginada o un array directo
-        if (response.results) {
-          // Respuesta paginada de DRF
-          allOrders.push(...response.results);
-          nextUrl = response.next;
-          console.log(`✅ Página ${page}: ${response.results.length} órdenes (Total: ${response.count})`);
-        } else if (Array.isArray(response)) {
-          // Respuesta directa (sin paginación)
-          allOrders = response;
-          nextUrl = null;
-        } else {
-          console.error('❌ Formato de respuesta inesperado:', response);
-          break;
-        }
-        
-        page++;
-      } while (nextUrl && page <= 50); // Límite de seguridad: máximo 50 páginas
-      
-      console.log(`✅ [ADMIN ORDERS] Total órdenes cargadas: ${allOrders.length}`);
-      console.log('🔍 [ADMIN ORDERS] Primera orden con items:', allOrders[0]);
-      
-      setOrders(allOrders);
+        setOrders(response.results);
+        setTotalCount(response.count);
+        setTotalPages(Math.ceil(response.count / pageSize));
+      } else if (Array.isArray(response)) {
+        // Fallback: respuesta directa sin paginación
+        console.log(`📄 [ADMIN ORDERS] ${response.length} órdenes (sin paginación)`);
+        setOrders(response);
+        setTotalCount(response.length);
+        setTotalPages(1);
+      }
     } catch (error) {
       console.error('❌ Error loading orders:', error);
       alert('❌ Error al cargar órdenes');
@@ -73,7 +60,8 @@ export default function AdminOrders() {
       setUpdatingStatus(orderId);
       await adminService.updateOrderStatus(orderId, newStatus);
       alert('✅ Estado actualizado');
-      loadOrders();
+      // Recargar solo la página actual
+      loadOrders(currentPage);
     } catch (error) {
       console.error('Error updating status:', error);
       alert('❌ Error al actualizar estado');
@@ -87,7 +75,8 @@ export default function AdminOrders() {
     try {
       await adminService.deleteOrder(orderId);
       alert('✅ Orden eliminada');
-      loadOrders();
+      // Recargar solo la página actual
+      loadOrders(currentPage);
     } catch (error) {
       console.error('Error deleting order:', error);
       alert('❌ Error al eliminar orden');
@@ -105,12 +94,7 @@ export default function AdminOrders() {
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
-  // 📄 Calcular paginación
-  const indexOfLastOrder = currentPage * itemsPerPage;
-  const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
-  const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
-  const totalPages = Math.ceil(orders.length / itemsPerPage);
-
+  // 📄 Navegación de páginas del backend
   const goToNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
@@ -141,41 +125,32 @@ export default function AdminOrders() {
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <ShoppingCart className="h-8 w-8 text-indigo-600" />
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-indigo-100 rounded-lg">
+            <ShoppingCart className="h-6 w-6 text-indigo-600" />
+          </div>
           <div>
             <h1 className="text-3xl font-bold">Gestión de Órdenes</h1>
-            <p className="text-gray-600">{orders.length} órdenes totales</p>
+            <p className="text-gray-600">
+              {totalCount > 0 ? `${totalCount} órdenes totales` : 'Cargando...'}
+            </p>
           </div>
         </div>
 
-        {/* 📄 Control de items por página */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700">Mostrar:</label>
-          <select
-            value={itemsPerPage}
-            onChange={(e) => {
-              setItemsPerPage(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={20}>20</option>
-            <option value={50}>50</option>
-          </select>
-          <span className="text-sm text-gray-600">por página</span>
+        {/* 📄 Info de paginación del backend */}
+        <div className="text-sm text-gray-600 text-right">
+          <p className="font-medium">Página {currentPage} de {totalPages}</p>
+          <p>{pageSize} órdenes por página</p>
         </div>
       </div>
 
-      {/* 📊 Info de paginación */}
+      {/* 📊 Rango de órdenes mostradas */}
       <div className="mb-4 text-sm text-gray-600">
-        Mostrando {indexOfFirstOrder + 1} - {Math.min(indexOfLastOrder, orders.length)} de {orders.length} órdenes
+        Mostrando {((currentPage - 1) * pageSize) + 1} - {Math.min(currentPage * pageSize, totalCount)} de {totalCount} órdenes
       </div>
 
       <div className="space-y-4">
-        {currentOrders.map(order => (
+        {orders.map(order => (
           <div key={order.id} className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex justify-between items-start mb-4">
               <div>
