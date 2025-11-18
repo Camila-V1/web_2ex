@@ -13,8 +13,14 @@ import {
   Clock,
   Truck,
   XCircle,
-  RotateCcw
+  RotateCcw,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  X
 } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 export default function MyOrders() {
   const navigate = useNavigate();
@@ -23,17 +29,78 @@ export default function MyOrders() {
   const [error, setError] = useState(null);
   const [downloadingInvoice, setDownloadingInvoice] = useState(null);
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+  // 📄 Estados de paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 50; // Tamaño de página del backend
 
-  const fetchOrders = async () => {
+  // 🔍 Estados de filtros
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    status: '',
+    start_date: '',
+    end_date: ''
+  });
+
+  useEffect(() => {
+    fetchOrders(currentPage);
+  }, [currentPage]);
+
+  const fetchOrders = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await orderService.getOrders();
-      setOrders(response);
+      console.log(`📄 [MY ORDERS] Cargando página ${page}...`);
+      
+      // 🚀 Construir URL con filtros y paginación
+      const token = localStorage.getItem('access_token');
+      let url = `${API_URL}/orders/?page=${page}`;
+      
+      if (filters.status) {
+        url += `&status=${filters.status}`;
+      }
+      
+      if (filters.start_date) {
+        url += `&start_date=${filters.start_date}`;
+      }
+      
+      if (filters.end_date) {
+        url += `&end_date=${filters.end_date}`;
+      }
+
+      console.log('🔍 [MY ORDERS] URL completa:', url);
+
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ [MY ORDERS] Response:', data);
+
+      // Verificar si la respuesta es paginada de DRF
+      if (data.results) {
+        console.log(`📊 [MY ORDERS] Página ${page}: ${data.results.length} órdenes de ${data.count} totales`);
+        setOrders(data.results);
+        setTotalCount(data.count);
+        setTotalPages(Math.ceil(data.count / pageSize));
+      } else if (Array.isArray(data)) {
+        // Fallback: respuesta directa sin paginación
+        console.log(`📄 [MY ORDERS] ${data.length} órdenes (sin paginación)`);
+        setOrders(data);
+        setTotalCount(data.length);
+        setTotalPages(1);
+      }
+      
+      setError(null);
     } catch (err) {
-      console.error('Error fetching orders:', err);
+      console.error('❌ [MY ORDERS] Error:', err);
       setError('Error al cargar las órdenes');
     } finally {
       setLoading(false);
@@ -119,6 +186,45 @@ export default function MyOrders() {
     navigate('/returns/new', { state: { order } });
   };
 
+  // 🔍 Aplicar filtros
+  const applyFilters = () => {
+    console.log('🔍 [FILTERS] Aplicando filtros:', filters);
+    setCurrentPage(1);
+    fetchOrders(1);
+  };
+
+  // 🗑️ Limpiar filtros
+  const clearFilters = () => {
+    console.log('🗑️ [FILTERS] Limpiando filtros');
+    setFilters({
+      status: '',
+      start_date: '',
+      end_date: ''
+    });
+    setCurrentPage(1);
+    fetchOrders(1);
+  };
+
+  // 📄 Navegación de páginas
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const goToPage = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -152,16 +258,110 @@ export default function MyOrders() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-4">
-          <ShoppingBag className="h-8 w-8 text-indigo-600" />
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Mis Órdenes</h1>
-            <p className="text-gray-600">
-              Historial de tus compras y pedidos
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <ShoppingBag className="h-8 w-8 text-indigo-600" />
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Mis Órdenes</h1>
+              <p className="text-gray-600">
+                {totalCount > 0 ? `${totalCount} órdenes en total` : 'Historial de tus compras y pedidos'}
+              </p>
+            </div>
           </div>
+
+          {/* Botón de filtros */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            <Filter className="h-4 w-4" />
+            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+          </button>
         </div>
       </div>
+
+      {/* 🔍 Panel de Filtros */}
+      {showFilters && (
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filtrar Órdenes
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Estado */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Estado
+              </label>
+              <select
+                value={filters.status}
+                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              >
+                <option value="">Todos los estados</option>
+                <option value="PENDING">Pendiente</option>
+                <option value="PAID">Pagado</option>
+                <option value="SHIPPED">Enviado</option>
+                <option value="DELIVERED">Entregado</option>
+                <option value="CANCELLED">Cancelado</option>
+              </select>
+            </div>
+
+            {/* Fecha inicio */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Desde
+              </label>
+              <input
+                type="date"
+                value={filters.start_date}
+                onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Fecha fin */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Hasta
+              </label>
+              <input
+                type="date"
+                value={filters.end_date}
+                onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Botones de acción */}
+          <div className="flex gap-3 mt-6">
+            <button
+              onClick={applyFilters}
+              className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              <CheckCircle className="h-4 w-4" />
+              Aplicar Filtros
+            </button>
+
+            <button
+              onClick={clearFilters}
+              className="flex items-center gap-2 px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            >
+              <X className="h-4 w-4" />
+              Limpiar Filtros
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 📊 Contador de resultados */}
+      {totalCount > 0 && !loading && (
+        <div className="mb-4 text-sm text-gray-600">
+          Mostrando {((currentPage - 1) * pageSize) + 1} - {Math.min(currentPage * pageSize, totalCount)} de {totalCount} órdenes
+        </div>
+      )}
 
       {/* Lista de Órdenes */}
       {orders.length === 0 ? (
@@ -302,6 +502,81 @@ export default function MyOrders() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* 📄 Controles de Paginación */}
+      {totalPages > 1 && !loading && (
+        <div className="mt-8 flex items-center justify-center gap-2">
+          {/* Botón Anterior */}
+          <button
+            onClick={goToPreviousPage}
+            disabled={currentPage === 1}
+            className={`flex items-center gap-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+              currentPage === 1
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Anterior
+          </button>
+
+          {/* Números de Página */}
+          <div className="flex gap-1">
+            {[...Array(totalPages)].map((_, index) => {
+              const pageNumber = index + 1;
+              
+              // Mostrar solo páginas relevantes (primera, última, actuales +/- 2)
+              if (
+                pageNumber === 1 ||
+                pageNumber === totalPages ||
+                (pageNumber >= currentPage - 2 && pageNumber <= currentPage + 2)
+              ) {
+                return (
+                  <button
+                    key={pageNumber}
+                    onClick={() => goToPage(pageNumber)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      currentPage === pageNumber
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              }
+              
+              // Mostrar "..." para páginas omitidas
+              if (
+                pageNumber === currentPage - 3 ||
+                pageNumber === currentPage + 3
+              ) {
+                return (
+                  <span key={pageNumber} className="px-2 py-2 text-gray-400">
+                    ...
+                  </span>
+                );
+              }
+              
+              return null;
+            })}
+          </div>
+
+          {/* Botón Siguiente */}
+          <button
+            onClick={goToNextPage}
+            disabled={currentPage === totalPages}
+            className={`flex items-center gap-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+              currentPage === totalPages
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            Siguiente
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
       )}
     </div>
