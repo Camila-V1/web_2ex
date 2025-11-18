@@ -361,8 +361,21 @@ export const adminService = {
   },
 
   // Gestión de órdenes admin
-  getAllOrders: async (page = 1, pageSize = 100) => {
-    const response = await api.get(`orders/admin/?page=${page}&page_size=${pageSize}`);
+  getAllOrders: async (page = 1, pageSize = 50, filters = {}) => {
+    let url = `orders/admin/?page=${page}&page_size=${pageSize}`;
+    
+    // Agregar filtros si existen
+    if (filters.status) {
+      url += `&status=${filters.status}`;
+    }
+    if (filters.start_date) {
+      url += `&start_date=${filters.start_date}`;
+    }
+    if (filters.end_date) {
+      url += `&end_date=${filters.end_date}`;
+    }
+    
+    const response = await api.get(url);
     return response.data;
   },
 

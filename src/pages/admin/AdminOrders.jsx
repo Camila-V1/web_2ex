@@ -9,7 +9,10 @@ import {
   Trash2,
   Edit,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Filter,
+  X,
+  Search
 } from 'lucide-react';
 
 export default function AdminOrders() {
@@ -21,7 +24,15 @@ export default function AdminOrders() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const pageSize = 100; // Tamaño de página del backend
+  const pageSize = 50; // ✅ CAMBIADO: 50 órdenes por página
+
+  // 🔍 Estados de filtros
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    status: '',
+    start_date: '',
+    end_date: ''
+  });
 
   useEffect(() => {
     loadOrders(currentPage);
@@ -30,12 +41,13 @@ export default function AdminOrders() {
   const loadOrders = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await adminService.getAllOrders(page, pageSize);
+      console.log(`📄 [ADMIN ORDERS] Cargando página ${page} con filtros:`, filters);
+      
+      const response = await adminService.getAllOrders(page, pageSize, filters);
       
       // Verificar si la respuesta es paginada de DRF
       if (response.results) {
-        console.log(`📄 [ADMIN ORDERS] Página ${page}: ${response.results.length} órdenes`);
-        console.log(`📊 [ADMIN ORDERS] Total: ${response.count} órdenes`);
+        console.log(`📊 [ADMIN ORDERS] Página ${page}: ${response.results.length} de ${response.count} órdenes totales`);
         
         setOrders(response.results);
         setTotalCount(response.count);
@@ -114,6 +126,31 @@ export default function AdminOrders() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // 🔍 Aplicar filtros
+  const applyFilters = () => {
+    console.log('✅ [FILTERS] Aplicando filtros:', filters);
+    setCurrentPage(1);
+    loadOrders(1);
+  };
+
+  // 🗑️ Limpiar filtros
+  const clearFilters = () => {
+    console.log('🗑️ [FILTERS] Limpiando filtros');
+    setFilters({
+      status: '',
+      start_date: '',
+      end_date: ''
+    });
+    setCurrentPage(1);
+  };
+
+  // Recargar cuando se limpien los filtros
+  useEffect(() => {
+    if (!filters.status && !filters.start_date && !filters.end_date) {
+      loadOrders(currentPage);
+    }
+  }, [filters]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -137,16 +174,98 @@ export default function AdminOrders() {
           </div>
         </div>
 
-        {/* 📄 Info de paginación del backend */}
-        <div className="text-sm text-gray-600 text-right">
-          <p className="font-medium">Página {currentPage} de {totalPages}</p>
-          <p>{pageSize} órdenes por página</p>
-        </div>
+        {/* Botón de filtros */}
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+        >
+          <Filter className="h-4 w-4" />
+          {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+        </button>
       </div>
 
-      {/* 📊 Rango de órdenes mostradas */}
+      {/* 🔍 Panel de Filtros */}
+      {showFilters && (
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filtrar Órdenes
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Estado */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Estado
+              </label>
+              <select
+                value={filters.status}
+                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              >
+                <option value="">Todos los estados</option>
+                <option value="PENDING">Pendiente</option>
+                <option value="PAID">Pagado</option>
+                <option value="SHIPPED">Enviado</option>
+                <option value="DELIVERED">Entregado</option>
+                <option value="CANCELLED">Cancelado</option>
+              </select>
+            </div>
+
+            {/* Fecha inicio */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Desde
+              </label>
+              <input
+                type="date"
+                value={filters.start_date}
+                onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Fecha fin */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Hasta
+              </label>
+              <input
+                type="date"
+                value={filters.end_date}
+                onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Botones de acción */}
+          <div className="flex gap-3 mt-6">
+            <button
+              onClick={applyFilters}
+              className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              <Search className="h-4 w-4" />
+              Aplicar Filtros
+            </button>
+
+            <button
+              onClick={clearFilters}
+              className="flex items-center gap-2 px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            >
+              <X className="h-4 w-4" />
+              Limpiar Filtros
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 📊 Info de paginación del backend */}
       <div className="mb-4 text-sm text-gray-600">
         Mostrando {((currentPage - 1) * pageSize) + 1} - {Math.min(currentPage * pageSize, totalCount)} de {totalCount} órdenes
+        {(filters.status || filters.start_date || filters.end_date) && (
+          <span className="ml-2 text-indigo-600 font-medium">(Filtrado)</span>
+        )}
       </div>
 
       <div className="space-y-4">
